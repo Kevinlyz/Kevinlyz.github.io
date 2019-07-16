@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/head.jpg?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/head.jpg?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/head.jpg?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="@TOC 一、Mybatis的三种传入参数的方式1. 根据下标索引传值通过传递参数的顺序进行索引，获得参数的值 123456Public User selectUser(String name,String area);&amp;lt;select id=&quot;selectUser&quot; resultMap=&quot;BaseResultMap&quot;&amp;gt;select * from user_user_t where us">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kevinlyz">
+<meta property="og:url" content="http://yoursite.com/2019/07/16/一文学会Mybatis  Mybatis传入参数及返回类型/index.html">
+<meta property="og:site_name" content="Kevinlyz">
+<meta property="og:description" content="@TOC 一、Mybatis的三种传入参数的方式1. 根据下标索引传值通过传递参数的顺序进行索引，获得参数的值 123456Public User selectUser(String name,String area);&amp;lt;select id=&quot;selectUser&quot; resultMap=&quot;BaseResultMap&quot;&amp;gt;select * from user_user_t where us">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2019-07-16T02:44:41.625Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Kevinlyz">
+<meta name="twitter:description" content="@TOC 一、Mybatis的三种传入参数的方式1. 根据下标索引传值通过传递参数的顺序进行索引，获得参数的值 123456Public User selectUser(String name,String area);&amp;lt;select id=&quot;selectUser&quot; resultMap=&quot;BaseResultMap&quot;&amp;gt;select * from user_user_t where us">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/07/16/一文学会Mybatis  Mybatis传入参数及返回类型/">
+
+
+
+
+
+  <title> | Kevinlyz</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="default">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Kevinlyz</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">当你的才华还撑不起你的野心时，你就应该静下心来学习。</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/16/一文学会Mybatis  Mybatis传入参数及返回类型/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="KevinLyz">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Kevinlyz">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline"></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-16T10:44:41+08:00">
+                2019-07-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>@<a href="Mybatis传入参数及返回类型详解">TOC</a></p>
+<h2 id="一、Mybatis的三种传入参数的方式"><a href="#一、Mybatis的三种传入参数的方式" class="headerlink" title="一、Mybatis的三种传入参数的方式"></a>一、Mybatis的三种传入参数的方式</h2><h3 id="1-根据下标索引传值"><a href="#1-根据下标索引传值" class="headerlink" title="1. 根据下标索引传值"></a>1. 根据下标索引传值</h3><p>通过传递参数的顺序进行索引，获得参数的值</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Public User <span class="title">selectUser</span><span class="params">(String name,String area)</span></span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&lt;select id=<span class="string">"selectUser"</span> resultMap=<span class="string">"BaseResultMap"</span>&gt;</span><br><span class="line">select * from user_user_t where user_name = #&#123;0&#125; and user_area=#&#123;1&#125;</span><br><span class="line">&lt;/select&gt;</span><br></pre></td></tr></table></figure>
+
+<p>其中#{0} 代表传入的第一个参数，之后依次进行索引。</p>
+<h3 id="2-使用-param注解进行参数传递"><a href="#2-使用-param注解进行参数传递" class="headerlink" title="2. 使用@param注解进行参数传递"></a>2. 使用@param注解进行参数传递</h3><p>先看例子：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Public User <span class="title">selectUser</span><span class="params">(@param(“userName”)</span>Stringname,@<span class="title">param</span><span class="params">(“userArea”)</span>String area)</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&lt;select id=<span class="string">" selectUser"</span> resultMap=<span class="string">"BaseResultMap"</span>&gt;</span><br><span class="line">select * from user_user_t where user_name = #&#123;userName，jdbcType=VARCHAR&#125; and user_area=#&#123;userArea,jdbcType=VARCHAR&#125;</span><br><span class="line">&lt;/select&gt;</span><br></pre></td></tr></table></figure>
+
+<p>这种方法通过定义注解，设定参数的key值，在mapper.xml中通过key值进行获取，这种方法较为直观，但是参数数量较为固定。</p>
+<h3 id="3、通过map传递参数"><a href="#3、通过map传递参数" class="headerlink" title="3、通过map传递参数"></a>3、通过map传递参数</h3><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Public User <span class="title">selectUser</span><span class="params">(Map paramMap)</span></span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&lt;select id=<span class="string">" selectUser"</span> resultMap=<span class="string">"BaseResultMap"</span>&gt;</span><br><span class="line">select * from user_user_t where user_name = #&#123;userName，jdbcType=VARCHAR&#125; and user_area=#&#123;userArea,jdbcType=VARCHAR&#125;</span><br><span class="line">&lt;/select&gt;</span><br></pre></td></tr></table></figure>
+
+<p>通过map的方式进行参数传递不需要固定参数的数量，在mapper中直接通过key值获得参数的值。</p>
+<h3 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h3><p>这几种参数传递的方式每个人有每个人的习惯，可以在具体的项目中根据自己的使用习惯进行选择。</p>
+<h2 id="二、Mybatis的返回类型"><a href="#二、Mybatis的返回类型" class="headerlink" title="二、Mybatis的返回类型"></a>二、Mybatis的返回类型</h2><h3 id="1、返回参数类型"><a href="#1、返回参数类型" class="headerlink" title="1、返回参数类型"></a>1、返回参数类型</h3><p>MyBatis的返回参数类型分两种<br>参数类型|对应的返回值类型<br>——– | —–<br>resultMap|可以返回一个list，也可以返回一个实体<br>resultType|int、string、long、class（实体）</p>
+<h3 id="2、-指定返回resultType"><a href="#2、-指定返回resultType" class="headerlink" title="2、 指定返回resultType"></a>2、 指定返回resultType</h3><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">&lt;select id=<span class="string">"queryCategoryBrandCount"</span> resultType=<span class="string">"java.lang.Integer"</span> parameterType=<span class="string">"java.util.HashMap"</span> &gt;  </span><br><span class="line">        <span class="function">select <span class="title">count</span><span class="params">(<span class="number">1</span>)</span>  </span></span><br><span class="line"><span class="function">        from common_category_brand  </span></span><br><span class="line"><span class="function">        where 1</span>=<span class="number">1</span>  </span><br><span class="line">        &lt;<span class="keyword">if</span> test=<span class="string">"categoryId != null"</span> &gt;  </span><br><span class="line">            and category_id = #&#123;categoryId,jdbcType=BIGINT&#125;  </span><br><span class="line">        &lt;/if&gt;  </span><br><span class="line">        &lt;<span class="keyword">if</span> test=<span class="string">"brandId != null"</span> &gt;  </span><br><span class="line">            and brand_id = #&#123;brandId,jdbcType=BIGINT&#125;  </span><br><span class="line">        &lt;/if&gt;  </span><br><span class="line">    &lt;/select&gt;</span><br></pre></td></tr></table></figure>
+
+<h3 id="3、-指定返回resultMap"><a href="#3、-指定返回resultMap" class="headerlink" title="3、 指定返回resultMap"></a>3、 指定返回resultMap</h3><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&lt;select id=<span class="string">"selectByPrimaryKey"</span> resultMap=<span class="string">"BaseResultMap"</span> parameterType=<span class="string">"java.lang.Long"</span> &gt;  </span><br><span class="line">    select   </span><br><span class="line">    &lt;include refid=<span class="string">"Base_Column_List"</span> /&gt;  </span><br><span class="line">    from common_car_make  </span><br><span class="line">    where id = #&#123;id,jdbcType=BIGINT&#125;  </span><br><span class="line">  &lt;/select&gt;</span><br></pre></td></tr></table></figure>
+
+<p>在返回ResultMap时，需要对之前对BaseResultMap中返回的值的类型进行指定，在执行select语句时返回相应的resultMap</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/07/16/理解Spring家族生态体系/" rel="next" title>
+                <i class="fa fa-chevron-left"></i> 
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/07/16/Java匿名对象的性能优势分析/" rel="prev" title>
+                 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">KevinLyz</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">26</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/qq_31749835" target="_blank" title="csdn">
+                      
+                        <i class="fa fa-fw fa-globe"></i>csdn</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#一、Mybatis的三种传入参数的方式"><span class="nav-number">1.</span> <span class="nav-text">一、Mybatis的三种传入参数的方式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-根据下标索引传值"><span class="nav-number">1.1.</span> <span class="nav-text">1. 根据下标索引传值</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-使用-param注解进行参数传递"><span class="nav-number">1.2.</span> <span class="nav-text">2. 使用@param注解进行参数传递</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3、通过map传递参数"><span class="nav-number">1.3.</span> <span class="nav-text">3、通过map传递参数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#小结"><span class="nav-number">1.4.</span> <span class="nav-text">小结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二、Mybatis的返回类型"><span class="nav-number">2.</span> <span class="nav-text">二、Mybatis的返回类型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1、返回参数类型"><span class="nav-number">2.1.</span> <span class="nav-text">1、返回参数类型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2、-指定返回resultType"><span class="nav-number">2.2.</span> <span class="nav-text">2、 指定返回resultType</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3、-指定返回resultMap"><span class="nav-number">2.3.</span> <span class="nav-text">3、 指定返回resultMap</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-KevinLyz"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">KevinLyz</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

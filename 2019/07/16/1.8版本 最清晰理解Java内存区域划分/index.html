@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/head.jpg?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/head.jpg?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/head.jpg?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="@toc 写在前面在正式开始文章的阅读之前，我们还要区分几个概念，这很重要：（很多博客对Java内存模型，Java内存区域结构混一谈，丝毫不加辨析，以至于很多时候看完之后还是云里雾里）  Java内存模型：JMM与==多线程相关==，看起来和Java内存区域很相似，但JMM是一个抽象的概念，不是具体存在的。JMM描述了一组规则或规范，这个规范定义了一个线程对共享变量的操作对其他线程是可见的。 Ja">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kevinlyz">
+<meta property="og:url" content="http://yoursite.com/2019/07/16/1.8版本 最清晰理解Java内存区域划分/index.html">
+<meta property="og:site_name" content="Kevinlyz">
+<meta property="og:description" content="@toc 写在前面在正式开始文章的阅读之前，我们还要区分几个概念，这很重要：（很多博客对Java内存模型，Java内存区域结构混一谈，丝毫不加辨析，以至于很多时候看完之后还是云里雾里）  Java内存模型：JMM与==多线程相关==，看起来和Java内存区域很相似，但JMM是一个抽象的概念，不是具体存在的。JMM描述了一组规则或规范，这个规范定义了一个线程对共享变量的操作对其他线程是可见的。 Ja">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190605194151762.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/2019060519421961.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190327152912955.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190605194340336.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190327161244682.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190327161533151.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70">
+<meta property="og:updated_time" content="2019-07-16T02:47:44.686Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Kevinlyz">
+<meta name="twitter:description" content="@toc 写在前面在正式开始文章的阅读之前，我们还要区分几个概念，这很重要：（很多博客对Java内存模型，Java内存区域结构混一谈，丝毫不加辨析，以至于很多时候看完之后还是云里雾里）  Java内存模型：JMM与==多线程相关==，看起来和Java内存区域很相似，但JMM是一个抽象的概念，不是具体存在的。JMM描述了一组规则或规范，这个规范定义了一个线程对共享变量的操作对其他线程是可见的。 Ja">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/20190605194151762.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/07/16/1.8版本 最清晰理解Java内存区域划分/">
+
+
+
+
+
+  <title> | Kevinlyz</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="default">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Kevinlyz</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">当你的才华还撑不起你的野心时，你就应该静下心来学习。</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/16/1.8版本 最清晰理解Java内存区域划分/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="KevinLyz">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Kevinlyz">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline"></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-16T10:47:44+08:00">
+                2019-07-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>@<a href="从Java的各种基本数据类型看Java内存区域划分">toc</a></p>
+<h2 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h2><p>在正式开始文章的阅读之前，我们还要区分几个概念，这很重要：（很多博客对Java内存模型，Java内存区域结构混一谈，丝毫不加辨析，以至于很多时候看完之后还是云里雾里）</p>
+<ul>
+<li>Java内存模型：JMM与==多线程相关==，看起来和Java内存区域很相似，但JMM是一个抽象的概念，不是具体存在的。JMM描述了一组规则或规范，这个规范定义了一个线程对共享变量的操作对其他线程是可见的。</li>
+<li>Java内存区域|Java内存结构：Java内存结构是JVM的运行时，虚拟机在执行Java程序时会内存区域划分为若干个不同的内存区域，这些区域各自都有自己的作用。只是不同的JVM虚拟机对区域的划分稍有不同，但都遵循下面第二节所规定的规范。</li>
+</ul>
+<h2 id="一、各种基本数据类型的存储"><a href="#一、各种基本数据类型的存储" class="headerlink" title="一、各种基本数据类型的存储"></a>一、各种基本数据类型的存储</h2><p>我们先来看一段小代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> a = <span class="number">20</span>;</span><br><span class="line">	<span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> main（String[] args)&#123;</span><br><span class="line">		<span class="keyword">int</span> b = <span class="number">10</span>;</span><br><span class="line">		String str1 = ”abc“;</span><br><span class="line">		String str2 = <span class="keyword">new</span> String(<span class="string">"abc"</span>);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们先初步分析一下着三个变量的存储过程：<br>int 声明的都是8中基本数据类型中的一种。</p>
+<ul>
+<li>int a 是一个类的成员变量，成员变量的生命周期是和类在一起的，类下的每一个方法对于成员变量的值都是共享的，也就是成员变量需要多个方法都可以进行访问。</li>
+<li>int b 是main里面的一个局部变量，他的生命周期随着方法的结束而结束。</li>
+<li>String str1和String str2的两种声明方式相同吗？ 答案是否定的，我们先阐述结果，然后带着疑问继续看后面的分析。<br>首先str1和str2的内容是存储在stack（栈）中的，他们是分别指向自己应当指向的内存区域（可能是栈中，也可能是堆中）<br>str1是一个String类型的内容，”abc”在编译时被放入静态常量池（也就是class常量池）中，运行时被拿到运行时常量池中的字符串常量池，然后由str1指向”abc”的区域。<br>str2的 new String(“abc”)是存储在内存区域中的堆中的，这个new的过程是在运行期初始化阶段才确定的，然后Stack上的str2指向heap（堆）上的new String(“abc”)。<br>因为他们是指向的不同的内存区域，System.out.println(str1 == str2); 的结果也自然就是false了。</li>
+</ul>
+<h2 id="二、Java内存区域的划分（运行时数据区）"><a href="#二、Java内存区域的划分（运行时数据区）" class="headerlink" title="二、Java内存区域的划分（运行时数据区）"></a>二、Java内存区域的划分（运行时数据区）</h2><p>Java 虚拟机在执行 Java 程序的过程中会把它管理的内存划分成若干个不同的数据区域。</p>
+<p>1.8之前：<br><img src="https://img-blog.csdnimg.cn/20190605194151762.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>1.8之后：<br><img src="https://img-blog.csdnimg.cn/2019060519421961.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>我们可以把它们分为两个类型的区域，一种是线程私有的，另一种是线程共享的。</p>
+<ul>
+<li>线程共享的区域：<ul>
+<li>堆（Heap）</li>
+<li>方法区（Method Area）</li>
+</ul>
+</li>
+<li>线程私有：<ul>
+<li>程序计数器（PC)</li>
+<li>虚拟机栈（VM Stack）</li>
+<li>本地方法栈（Native Method Stack）</li>
+</ul>
+</li>
+</ul>
+<h3 id="2-1-程序计数器（Program-Counter）："><a href="#2-1-程序计数器（Program-Counter）：" class="headerlink" title="2.1 程序计数器（Program Counter）："></a>2.1 程序计数器（Program Counter）：</h3><p> 可以看作是当前线程所执行的字节码的行号指示器，他标记着我们当前执行到了哪一条指令。类比我们计算机组成中的PC计数器，他实现着我们代码的控制流程。<br>在多线程的情况下，程序计数器用于记录当前线程执行的位置，从而当线程被切换回来的时候能够知道该线程上次运行到哪儿了。</p>
+<h3 id="2-2-Java虚拟机栈（Stack）"><a href="#2-2-Java虚拟机栈（Stack）" class="headerlink" title="2.2 Java虚拟机栈（Stack）"></a>2.2 Java虚拟机栈（Stack）</h3><p>与程序计数器一样，Java虚拟机栈也是线程私有的，它的生命周期和线程相同，描述的是 Java 方法执行的内存模型，每次方法调用的数据都是通过栈传递的。<br>Java 内存可以粗糙的区分为堆内存（Heap）和栈内存(Stack),其中栈就是现在说的虚拟机栈，或者说是虚拟机栈中局部变量表部分。 （实际上，Java虚拟机栈是由一个个栈帧组成，而每个栈帧中都拥有：局部变量表、操作数栈、动态链接、方法出口信息。）</p>
+<p>局部变量表主要存放了编译器可知的<strong>各种数据类型</strong>（boolean、byte、char、short、int、float、long、double）、<strong>对象引用</strong>（reference类型，它不同于对象本身，可能是一个指向对象起始地址的引用指针，也可能是指向一个代表对象的句柄或其他与此对象相关的位置）。</p>
+<p><strong>Java 虚拟机栈会出现两种异常：StackOverFlowError 和 OutOfMemoryError。</strong></p>
+<ul>
+<li>StackOverFlowError ：若 Java 虚拟机栈的内存大小不允许动态扩展，那么当线程请求栈的深度超过当前 Java 虚拟机栈的最大深度的时候，就抛出 StackOverFlowError 异常。</li>
+</ul>
+<p>程序实现SOF：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">StackOverFlow</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">int</span> stackSize = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">stackIncre</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        stackSize++;</span><br><span class="line">        stackIncre();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Throwable</span>&#123;</span><br><span class="line">        StackOverFlow sof = <span class="keyword">new</span> StackOverFlow();</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            sof.stackIncre();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">            System.out.println(sof.stackSize);</span><br><span class="line">            <span class="keyword">throw</span> e;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>OutOfMemery：若 Java 虚拟机栈的内存大小允许动态扩展，且当线程请求栈时内存用完了，无法再动态扩展了，此时抛出 OutOfMemoryError 异常。<br>程序实现OOM：<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">OutOfMemory</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span>&#123;</span><br><span class="line">        List list=<span class="keyword">new</span> ArrayList();</span><br><span class="line">        <span class="keyword">for</span>(;;)&#123;</span><br><span class="line">            <span class="keyword">int</span>[] tmp=<span class="keyword">new</span> <span class="keyword">int</span>[<span class="number">1000000</span>];</span><br><span class="line">            list.add(tmp);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<p>Java 虚拟机栈也是线程私有的，每个线程都有各自的 Java 虚拟机栈，而且随着线程的创建而创建，随着线程的死亡而死亡。</p>
+<h4 id="拓展：方法-函数如何调用？"><a href="#拓展：方法-函数如何调用？" class="headerlink" title="拓展：方法/函数如何调用？"></a>拓展：方法/函数如何调用？</h4><p>Java 栈可用类比数据结构中栈，Java 栈中保存的主要内容是栈帧，每一次函数调用都会有一个对应的栈帧被压入 Java 栈，每一个函数调用结束后，都会有一个栈帧被弹出。</p>
+<p>Java 方法有两种返回方式：</p>
+<ol>
+<li>return 语句。</li>
+<li>抛出异常。<br>不管哪种返回方式都会导致栈帧被弹出。</li>
+</ol>
+<h3 id="2-3-Java本地方法栈（Native-Method-Stack）"><a href="#2-3-Java本地方法栈（Native-Method-Stack）" class="headerlink" title="2.3 Java本地方法栈（Native Method Stack）"></a>2.3 Java本地方法栈（Native Method Stack）</h3><p>和虚拟机栈所发挥的作用非常相似，区别是： 虚拟机栈为虚拟机执行 Java 方法 （也就是字节码）服务，而本地方法栈则为虚拟机使用到的 Native 方法服务。 在 HotSpot 虚拟机中和 Java 虚拟机栈合二为一。</p>
+<p>本地方法被执行的时候，在本地方法栈也会创建一个栈帧，用于存放该本地方法的局部变量表、操作数栈、动态链接、出口信息。</p>
+<p>方法执行完毕后相应的栈帧也会出栈并释放内存空间，也会出现 StackOverFlowError 和 OutOfMemoryError 两种异常。</p>
+<h3 id="2-4-堆（Heap）"><a href="#2-4-堆（Heap）" class="headerlink" title="2.4 堆（Heap）"></a>2.4 堆（Heap）</h3><p>Java 虚拟机所管理的内存中最大的一块，Java 堆是所有线程共享的一块内存区域，在虚拟机启动时创建。此内存区域的唯一目的就是存放对象实例，几乎所有的对象实例以及数组都在这里分配内存。<br>Java 堆是垃圾收集器管理的主要区域，因此也被称作GC堆（Garbage Collected Heap）。从垃圾回收的角度，由于现在收集器基本都采用分代垃圾收集算法，所以Java堆还可以细分为：新生代和老年代：在细致一点有：Eden空间、From Survivor、To Survivor空间等。进一步划分的目的是更好地回收内存，或者更快地分配内存。<br><img src="https://img-blog.csdnimg.cn/20190327152912955.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br><strong>在 JDK 1.8中移除整个永久代，取而代之的是一个叫元空间（Metaspace）的区域（永久代使用的是JVM的堆内存空间，而元空间使用的是物理内存，直接受到本机的物理内存限制）。</strong></p>
+<h3 id="2-5-方法区（Method-Area-Non-Heap"><a href="#2-5-方法区（Method-Area-Non-Heap" class="headerlink" title="2.5 方法区（Method Area/Non-Heap)"></a>2.5 方法区（Method Area/Non-Heap)</h3><p>方法区与 Java 堆一样，是各个线程共享的内存区域，它用于存储已被虚拟机加载的类信息、常量、静态变量、即时编译器编译后的代码等数据。虽然Java虚拟机规范把方法区描述为堆的一个逻辑部分，但是它却有一个别名叫做 Non-Heap（非堆），目的应该是与 Java 堆区分开来。<br>HotSpot 虚拟机中方法区也常被称为 “永久代”，本质上两者并不等价。仅仅是因为 HotSpot 虚拟机设计团队用永久代来实现方法区而已，这样 HotSpot 虚拟机的垃圾收集器就可以像管理 Java 堆一样管理这部分内存了。但是这并不是一个好主意，因为这样更容易遇到内存溢出问题。</p>
+<h4 id="2-5-1-方法区和永久代的关系"><a href="#2-5-1-方法区和永久代的关系" class="headerlink" title="2.5.1 ==方法区和永久代的关系=="></a>2.5.1 ==方法区和永久代的关系==</h4><p>《Java 虚拟机规范》只是规定了有方法区这么个概念和它的作用，并没有规定如何去实现它。那么，在不同的 JVM 上方法区的实现肯定是不同的了。 方法区和永久代的关系很像 Java 中接口和类的关系，类实现了接口，而永久代就是 HotSpot 虚拟机对虚拟机规范中方法区的一种实现方式。 也就是说，永久代是 HotSpot 的概念，方法区是 Java 虚拟机规范中的定义，是一种规范，而永久代是一种实现，一个是标准一个是实现，其他的虚拟机实现并没有永久带这一说法。</p>
+<h4 id="2-5-2-常用参数"><a href="#2-5-2-常用参数" class="headerlink" title="2.5.2 常用参数"></a>2.5.2 常用参数</h4><p>JDK 1.8 之前永久代还没被彻底移除的时候通常通过下面这些参数来调节方法区大小</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">-XX:PermSize=N <span class="comment">//方法区 (永久代) 初始大小</span></span><br><span class="line">-XX:MaxPermSize=N <span class="comment">//方法区 (永久代) 最大大小,超过这个值将会抛出 OutOfMemoryError 异常:java.lang.OutOfMemoryError: PermGen</span></span><br></pre></td></tr></table></figure>
+
+<p>==相对而言，垃圾收集行为在这个区域是比较少出现的，但并非数据进入方法区后就“永久存在”了。==</p>
+<p>JDK 1.8 的时候，方法区（HotSpot 的永久代）被彻底移除了（JDK1.7 就已经开始了），取而代之是元空间，元空间使用的是直接内存。</p>
+<p>下面是一些常用参数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">-XX:MetaspaceSize=N <span class="comment">//设置 Metaspace 的初始（和最小大小）</span></span><br><span class="line">-XX:MaxMetaspaceSize=N <span class="comment">//设置 Metaspace 的最大大小</span></span><br></pre></td></tr></table></figure>
+
+<p>与永久代很大的不同就是，如果不指定大小的话，随着更多类的创建，虚拟机会耗尽所有可用的系统内存。</p>
+<h4 id="2-5-3-为什么要将永久代-PermGen-替换为元空间-MetaSpace-呢"><a href="#2-5-3-为什么要将永久代-PermGen-替换为元空间-MetaSpace-呢" class="headerlink" title="2.5.3 ==为什么要将永久代 (PermGen) 替换为元空间 (MetaSpace) 呢?=="></a>2.5.3 ==为什么要将永久代 (PermGen) 替换为元空间 (MetaSpace) 呢?==</h4><p>整个永久代有一个 JVM 本身设置固定大小上线，无法进行调整，而元空间使用的是直接内存，受本机可用内存的限制，并且永远不会得到 java.lang.OutOfMemoryError。你可以使用 -XX：MaxMetaspaceSize 标志设置最大元空间大小，默认值为 unlimited，这意味着它只受系统内存的限制。-XX：MetaspaceSize 调整标志定义元空间的初始大小如果未指定此标志，则 Metaspace 将根据运行时的应用程序需求动态地重新调整大小。</p>
+<h3 id="2-6-运行时常量池"><a href="#2-6-运行时常量池" class="headerlink" title="2.6 运行时常量池"></a>2.6 运行时常量池</h3><p> <strong>==jdk1.6、1.7、1.8实际上运行时常量池的位置都发生了很大的变化，jdk1.6运行时常量池存在于方法区，jdk1.7移到了堆区，而jdk1.8运行时常量池其实是存在于与方法区和堆区相对独立的元空间，而不是在堆区。==</strong><br>运行时常量池是方法区的一部分。Class 文件中除了有类的版本、字段、方法、接口等描述信息外，还有常量池信息（用于存放编译期生成的各种字面量和符号引用）<br><img src="https://img-blog.csdnimg.cn/20190605194340336.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>既然运行时常量池时方法区的一部分，自然受到方法区内存的限制，当常量池无法再申请到内存时会抛出 OutOfMemoryError 异常。</p>
+<h4 id="拓展：字符串常量池和运行时常量池什么关系？"><a href="#拓展：字符串常量池和运行时常量池什么关系？" class="headerlink" title="拓展：字符串常量池和运行时常量池什么关系？"></a>拓展：字符串常量池和运行时常量池什么关系？</h4><ul>
+<li>运行时常量池存在于内存中，也就是class常量池被加载到内存之后的版本，不同之处是：它的字面量可以动态的添加，符号引用可以被解析为直接引用</li>
+<li>JVM在执行某个类的时候，必须经过加载、连接、初始化，而连接又包括验证、准备、解析三个阶段。而当类加载到内存中后，jvm就会将class常量池中的内容存放到运行时常量池中，由此可知，运行时常量池也是每个类都有一个。在解析阶段，会把符号引用替换为直接引用，解析的过程会去查询字符串常量池，也就是我们上面所说的StringTable，以保证运行时常量池所引用的字符串与字符串常量池中是一致的。</li>
+</ul>
+<p>除此之外，常量池还有class constant pool<br>推荐阅读：<a href="https://blog.csdn.net/qq_26222859/article/details/73135660" target="_blank" rel="noopener">字符串常量池、class常量池和运行时常量池</a></p>
+<h3 id="2-7-直接内存"><a href="#2-7-直接内存" class="headerlink" title="2.7 直接内存"></a>2.7 直接内存</h3><p>直接内存并不是虚拟机运行时数据区的一部分，也不是虚拟机规范中定义的内存区域，但是这部分内存也被频繁地使用。而且也可能导致OutOfMemoryError异常出现。<br>JDK1.4中新加入的 NIO(New Input/Output) 类，引入了一种基于通道（Channel） 与缓存区（Buffer） 的 I/O 方式，它可以直接使用Native函数库直接分配堆外内存，然后通过一个存储在 Java 堆中的 DirectByteBuffer 对象作为这块内存的引用进行操作。这样就能在一些场景中显著提高性能，因为避免了在 Java 堆和 Native 堆之间来回复制数据。<br>本机直接内存的分配不会收到 Java 堆的限制，但是，既然是内存就会受到本机总内存大小以及处理器寻址空间的限制。</p>
+<h2 id="三、补充内容"><a href="#三、补充内容" class="headerlink" title="三、补充内容*"></a>三、补充内容*</h2><h3 id="3-1-String-对象的两种创建方式："><a href="#3-1-String-对象的两种创建方式：" class="headerlink" title="3.1  String 对象的两种创建方式："></a>3.1  String 对象的两种创建方式：</h3><p>就是我们上面（一）中的str1和str2两种创建string类型的方式。<strong>第一种方式是在常量池中拿对象，第二种方式是直接在堆内存空间创建一个新的对象</strong><br><img src="https://img-blog.csdnimg.cn/20190327161244682.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
+<h3 id="3-2-String-类型的常量池比较特殊。"><a href="#3-2-String-类型的常量池比较特殊。" class="headerlink" title="3.2  String 类型的常量池比较特殊。"></a>3.2  String 类型的常量池比较特殊。</h3><p>它的主要使用方法有两种：**</p>
+<ul>
+<li>用双引号声明出来的 String 对象会直接存储在常量池中。</li>
+<li>如果不是用双引号声明的 String 对象，可以使用 String 提供的 intern 方String.intern() 是一个 Native 方法，它的作用是：如果运行时常量池中已经包含一个等于此 String 对象内容的字符串，则返回常量池中该字符串的引用；如果没有，则在常量池中创建与此 String 内容相同的字符串，并返回常量池中创建的字符串的引用。</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">String s1 = <span class="keyword">new</span> String(<span class="string">"计算机"</span>);</span><br><span class="line">      String s2 = s1.intern();</span><br><span class="line">      String s3 = <span class="string">"计算机"</span>;</span><br><span class="line">      System.out.println(s2);<span class="comment">//计算机</span></span><br><span class="line">      System.out.println(s1 == s2);<span class="comment">//false，因为一个是堆内存中的String对象一个是常量池中的String对象，</span></span><br><span class="line">      System.out.println(s3 == s2);<span class="comment">//true，因为两个都是常量池中的String对</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="3-3-String-字符串拼接"><a href="#3-3-String-字符串拼接" class="headerlink" title="3.3  String 字符串拼接"></a>3.3  String 字符串拼接</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">String str1 = <span class="string">"str"</span>;</span><br><span class="line">String str2 = <span class="string">"ing"</span>;</span><br><span class="line"></span><br><span class="line">String str3 = <span class="string">"str"</span> + <span class="string">"ing"</span>;<span class="comment">//常量池中的对象</span></span><br><span class="line">String str4 = str1 + str2; <span class="comment">//在堆上创建的新的对象	  </span></span><br><span class="line">String str5 = <span class="string">"string"</span>;<span class="comment">//常量池中的对象</span></span><br><span class="line">System.out.println(str3 == str4);<span class="comment">//false</span></span><br><span class="line">System.out.println(str3 == str5);<span class="comment">//true</span></span><br><span class="line">System.out.println(str4 == str5);<span class="comment">//false</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-blog.csdnimg.cn/20190327161533151.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70" alt><br>尽量避免多个字符串拼接，因为这样会重新创建对象。如果需要改变字符串的花，可以使用 StringBuilder 或者 StringBuffer。</p>
+<h3 id="3-4-String-s1-new-String-“abc”-这句话创建了几个字符串对象？"><a href="#3-4-String-s1-new-String-“abc”-这句话创建了几个字符串对象？" class="headerlink" title="3.4 String s1 = new String(“abc”);这句话创建了几个字符串对象？"></a>3.4 String s1 = new String(“abc”);这句话创建了几个字符串对象？</h3><p>将创建 1 或 2 个字符串。如果池中已存在字符串文字“abc”，则池中只会创建一个字符串“s1”。如果池中没有字符串文字“abc”，那么它将首先在池中创建，然后在堆空间中创建，因此将创建总共 2 个字符串对象。</p>
+<p>验证：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">String s1 = new String(&quot;abc&quot;);// 堆内存的地址值</span><br><span class="line">		String s2 = &quot;abc&quot;;</span><br><span class="line">		System.out.println(s1 == s2);// 输出 false,因为一个是堆内存，一个是常量池的内存，故两者是不同的。</span><br><span class="line">		System.out.println(s1.equals(s2));// 输出 true</span><br></pre></td></tr></table></figure>
+
+<p>结果：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">false</span><br><span class="line">true</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-5-八种基本数据类型，基本类型的包装类和常量池"><a href="#3-5-八种基本数据类型，基本类型的包装类和常量池" class="headerlink" title="3.5 八种基本数据类型，基本类型的包装类和常量池"></a>3.5 八种基本数据类型，基本类型的包装类和常量池</h3><p>关于包装类的知识推荐阅读：<a href="https://blog.csdn.net/qq_31749835/article/details/88662590" target="_blank" rel="noopener">[Java基础] Java包装类及自动装箱、拆箱</a></p>
+<br>
+基本数据类型（String不是基本数据类型）的数据保存在stack中，如目录（一）中的b保存在栈中，10也保存在stack中，然后由b指向10
+
+<ul>
+<li><strong>Java 基本类型的包装类的大部分都实现了常量池技术，即Byte,Short,Integer,Long,Character,Boolean；这5种包装类默认创建了数值[-128，127]的相应类型的缓存数据，但是超出此范围仍然会去创建新的对象。</strong></li>
+<li><strong>两种浮点数类型的包装类 Float,Double 并没有实现常量池技术</strong></li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">Integer i1 = <span class="number">33</span>;</span><br><span class="line">Integer i2 = <span class="number">33</span>;</span><br><span class="line">System.out.println(i1 == i2);<span class="comment">// 输出true</span></span><br><span class="line">Integer i11 = <span class="number">333</span>;</span><br><span class="line">Integer i22 = <span class="number">333</span>;</span><br><span class="line">System.out.println(i11 == i22);<span class="comment">// 输出false</span></span><br><span class="line">Double i3 = <span class="number">1.2</span>;</span><br><span class="line">Double i4 = <span class="number">1.2</span>;</span><br><span class="line">System.out.println(i3 == i4);<span class="comment">// 输出false</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>Integer缓存源代码</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">*此方法将始终缓存-128到127（包括端点）范围内的值，并可以缓存此范围之外的其他值。</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Integer <span class="title">valueOf</span><span class="params">(<span class="keyword">int</span> i)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (i &gt;= IntegerCache.low &amp;&amp; i &lt;= IntegerCache.high)</span><br><span class="line">            <span class="keyword">return</span> IntegerCache.cache[i + (-IntegerCache.low)];</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> Integer(i);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>Integer i1=40；Java 在编译的时候会直接将代码封装成Integer i1=Integer.valueOf(40);，从而使用常量池中的对象。</li>
+<li>Integer i1 = new Integer(40);这种情况下会创建新的对象。</li>
+</ol>
+<p><strong>Integer比较更丰富的一个例子:</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">Integer i1 = <span class="number">40</span>;</span><br><span class="line">  Integer i2 = <span class="number">40</span>;</span><br><span class="line">  Integer i3 = <span class="number">0</span>;</span><br><span class="line">  Integer i4 = <span class="keyword">new</span> Integer(<span class="number">40</span>);</span><br><span class="line">  Integer i5 = <span class="keyword">new</span> Integer(<span class="number">40</span>);</span><br><span class="line">  Integer i6 = <span class="keyword">new</span> Integer(<span class="number">0</span>);</span><br><span class="line">  </span><br><span class="line">  System.out.println(<span class="string">"i1=i2   "</span> + (i1 == i2));</span><br><span class="line">  System.out.println(<span class="string">"i1=i2+i3   "</span> + (i1 == i2 + i3));</span><br><span class="line">  System.out.println(<span class="string">"i1=i4   "</span> + (i1 == i4));</span><br><span class="line">  System.out.println(<span class="string">"i4=i5   "</span> + (i4 == i5));</span><br><span class="line">  System.out.println(<span class="string">"i4=i5+i6   "</span> + (i4 == i5 + i6));   </span><br><span class="line">  System.out.println(<span class="string">"40=i5+i6   "</span> + (<span class="number">40</span> == i5 + i6));</span><br></pre></td></tr></table></figure>
+
+<p>运行结果：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">i1=i2   <span class="keyword">true</span></span><br><span class="line">i1=i2+i3   <span class="keyword">true</span></span><br><span class="line">i1=i4   <span class="keyword">false</span></span><br><span class="line">i4=i5   <span class="keyword">false</span></span><br><span class="line">i4=i5+i6   <span class="keyword">true</span></span><br><span class="line"><span class="number">40</span>=i5+i6   <span class="keyword">true</span></span><br></pre></td></tr></table></figure>
+
+<p>语句i4 == i5 + i6，因为+这个操作符不适用于Integer对象，首先i5和i6进行自动拆箱操作，进行数值相加，即i4 == 40。然后Integer对象无法与数值进行直接比较，所以i4自动拆箱转为int值40，最终这条语句转为40 == 40进行数值比较。</p>
+<h2 id="四、总结"><a href="#四、总结" class="headerlink" title="四、总结"></a>四、总结</h2><p>我们平时讨论最多的是stack栈内存和heap堆内存，再次对数据类型在内存中的存储问题来解释一下：</p>
+<ol>
+<li><p><strong>在==方法中声明==的变量，即该变量是局部变量，每当程序调用方法时，系统都会为该方法建立一个方法栈，其所在方法中声明的变量就放在方法栈中，当方法结束系统会释放方法栈，其对应在该方法中声明的变量随着栈的销毁而结束，这就局部变量只能在方法中有效的原因</strong></p>
+<p>   在方法中声明的变量可以是基本类型的变量，也可以是引用类型的变量。</p>
+<ul>
+<li>当声明是基本类型的变量的时，其变量名及值（变量名及值是两个概念）是放在JAVA虚拟机栈中</li>
+<li>当声明的是引用变量时，所声明的变量的reference（该变量实际上是在方法中存储的是内存地址值）是放在JAVA虚拟机的栈中，该变量所指向的对象是放在堆类存中的。</li>
+</ul>
+<ol start="2">
+<li><strong>在 ==类中声明== 的变量是成员变量，也叫全局变量，放在堆中的（因为全局变量不会随着某个方法执行结束而销毁）。</strong><br>同样在类中声明的变量即可是基本类型的变量 也可是引用类型的变量</li>
+</ol>
+</li>
+</ol>
+<ul>
+<li>当声明的是基本类型的变量其变量名及其值放在堆内存中的</li>
+<li>引用类型时，其声明的变量仍然会存储一个内存地址值，该内存地址值指向所引用的对象。引用变量名和对应的对象仍然存储在相应的堆中</li>
+</ul>
+<p><br><br><br></p>
+<blockquote>
+<p>参考：<a href="https://juejin.im/post/5b7d69e4e51d4538ca5730cb#heading-18" target="_blank" rel="noopener">https://juejin.im/post/5b7d69e4e51d4538ca5730cb#heading-18</a><br><a href="http://tangxman.github.io/2015/07/27/the-difference-of-java-string-pool/" target="_blank" rel="noopener">http://tangxman.github.io/2015/07/27/the-difference-of-java-string-pool/</a><br><a href="https://blog.csdn.net/zm13007310400/article/details/77534349" target="_blank" rel="noopener">https://blog.csdn.net/zm13007310400/article/details/77534349</a><br><a href="https://blog.csdn.net/jingjbuer/article/details/46348667" target="_blank" rel="noopener">https://blog.csdn.net/jingjbuer/article/details/46348667</a></p>
+</blockquote>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/07/16/有关Java浮点数的一个有趣的例子以及一个尚未解决的疑惑（java在存储float值时采用的什么策略,是否存在舍入优化？）/" rel="next" title>
+                <i class="fa fa-chevron-left"></i> 
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">KevinLyz</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">26</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/qq_31749835" target="_blank" title="csdn">
+                      
+                        <i class="fa fa-fw fa-globe"></i>csdn</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#写在前面"><span class="nav-number">1.</span> <span class="nav-text">写在前面</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#一、各种基本数据类型的存储"><span class="nav-number">2.</span> <span class="nav-text">一、各种基本数据类型的存储</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二、Java内存区域的划分（运行时数据区）"><span class="nav-number">3.</span> <span class="nav-text">二、Java内存区域的划分（运行时数据区）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-程序计数器（Program-Counter）："><span class="nav-number">3.1.</span> <span class="nav-text">2.1 程序计数器（Program Counter）：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-Java虚拟机栈（Stack）"><span class="nav-number">3.2.</span> <span class="nav-text">2.2 Java虚拟机栈（Stack）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#拓展：方法-函数如何调用？"><span class="nav-number">3.2.1.</span> <span class="nav-text">拓展：方法/函数如何调用？</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-Java本地方法栈（Native-Method-Stack）"><span class="nav-number">3.3.</span> <span class="nav-text">2.3 Java本地方法栈（Native Method Stack）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-4-堆（Heap）"><span class="nav-number">3.4.</span> <span class="nav-text">2.4 堆（Heap）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-5-方法区（Method-Area-Non-Heap"><span class="nav-number">3.5.</span> <span class="nav-text">2.5 方法区（Method Area/Non-Heap)</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#2-5-1-方法区和永久代的关系"><span class="nav-number">3.5.1.</span> <span class="nav-text">2.5.1 ==方法区和永久代的关系==</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-5-2-常用参数"><span class="nav-number">3.5.2.</span> <span class="nav-text">2.5.2 常用参数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-5-3-为什么要将永久代-PermGen-替换为元空间-MetaSpace-呢"><span class="nav-number">3.5.3.</span> <span class="nav-text">2.5.3 ==为什么要将永久代 (PermGen) 替换为元空间 (MetaSpace) 呢?==</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-6-运行时常量池"><span class="nav-number">3.6.</span> <span class="nav-text">2.6 运行时常量池</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#拓展：字符串常量池和运行时常量池什么关系？"><span class="nav-number">3.6.1.</span> <span class="nav-text">拓展：字符串常量池和运行时常量池什么关系？</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-7-直接内存"><span class="nav-number">3.7.</span> <span class="nav-text">2.7 直接内存</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三、补充内容"><span class="nav-number">4.</span> <span class="nav-text">三、补充内容*</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-String-对象的两种创建方式："><span class="nav-number">4.1.</span> <span class="nav-text">3.1  String 对象的两种创建方式：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-String-类型的常量池比较特殊。"><span class="nav-number">4.2.</span> <span class="nav-text">3.2  String 类型的常量池比较特殊。</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-String-字符串拼接"><span class="nav-number">4.3.</span> <span class="nav-text">3.3  String 字符串拼接</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-4-String-s1-new-String-“abc”-这句话创建了几个字符串对象？"><span class="nav-number">4.4.</span> <span class="nav-text">3.4 String s1 = new String(“abc”);这句话创建了几个字符串对象？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-5-八种基本数据类型，基本类型的包装类和常量池"><span class="nav-number">4.5.</span> <span class="nav-text">3.5 八种基本数据类型，基本类型的包装类和常量池</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#四、总结"><span class="nav-number">5.</span> <span class="nav-text">四、总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-KevinLyz"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">KevinLyz</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

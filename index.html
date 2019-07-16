@@ -229,7 +229,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/16/firstblog/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/16/1.8版本 最清晰理解Java内存区域划分/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="KevinLyz">
@@ -248,7 +248,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2019/07/16/firstblog/" itemprop="url">firstblog</a></h1>
+                <a class="post-title-link" href="/2019/07/16/1.8版本 最清晰理解Java内存区域划分/" itemprop="url">Untitled</a></h1>
         
 
         <div class="post-meta">
@@ -260,7 +260,7 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-16T09:18:34+08:00">
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-16T10:47:44+08:00">
                 2019-07-16
               </time>
             
@@ -300,7 +300,1638 @@
       
         
           
+            <p>@<a href="从Java的各种基本数据类型看Java内存区域划分">toc</a></p>
+<h2 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h2><p>在正式开始文章的阅读之前，我们还要区分几个概念，这很重要：（很多博客对Java内存模型，Java内存区域结构混一谈，丝毫不加辨析，以至于很多时候看完之后还是云里雾里）</p>
+<ul>
+<li>Java内存模型：JMM与==多线程相关==，看起来和Java内存区域很相似，但JMM是一个抽象的概念，不是具体存在的。JMM描述了一组规则或规范，这个规范定义了一个线程对共享变量的操作对其他线程是可见的。</li>
+<li>Java内存区域|Java内存结构：Java内存结构是JVM的运行时，虚拟机在执行Java程序时会内存区域划分为若干个不同的内存区域，这些区域各自都有自己的作用。只是不同的JVM虚拟机对区域的划分稍有不同，但都遵循下面第二节所规定的规范。</li>
+</ul>
+<h2 id="一、各种基本数据类型的存储"><a href="#一、各种基本数据类型的存储" class="headerlink" title="一、各种基本数据类型的存储"></a>一、各种基本数据类型的存储</h2><p>我们先来看一段小代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> a = <span class="number">20</span>;</span><br><span class="line">	<span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> main（String[] args)&#123;</span><br><span class="line">		<span class="keyword">int</span> b = <span class="number">10</span>;</span><br><span class="line">		String str1 = ”abc“;</span><br><span class="line">		String str2 = <span class="keyword">new</span> String(<span class="string">"abc"</span>);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们先初步分析一下着三个变量的存储过程：<br>int 声明的都是8中基本数据类型中的一种。</p>
+<ul>
+<li>int a 是一个类的成员变量，成员变量的生命周期是和类在一起的，类下的每一个方法对于成员变量的值都是共享的，也就是成员变量需要多个方法都可以进行访问。</li>
+<li>int b 是main里面的一个局部变量，他的生命周期随着方法的结束而结束。</li>
+<li>String str1和String str2的两种声明方式相同吗？ 答案是否定的，我们先阐述结果，然后带着疑问继续看后面的分析。<br>首先str1和str2的内容是存储在stack（栈）中的，他们是分别指向自己应当指向的内存区域（可能是栈中，也可能是堆中）<br>str1是一个String类型的内容，”abc”在编译时被放入静态常量池（也就是class常量池）中，运行时被拿到运行时常量池中的字符串常量池，然后由str1指向”abc”的区域。<br>str2的 new String(“abc”)是存储在内存区域中的堆中的，这个new的过程是在运行期初始化阶段才确定的，然后Stack上的str2指向heap（堆）上的new String(“abc”)。<br>因为他们是指向的不同的内存区域，System.out.println(str1 == str2); 的结果也自然就是false了。</li>
+</ul>
+<h2 id="二、Java内存区域的划分（运行时数据区）"><a href="#二、Java内存区域的划分（运行时数据区）" class="headerlink" title="二、Java内存区域的划分（运行时数据区）"></a>二、Java内存区域的划分（运行时数据区）</h2><p>Java 虚拟机在执行 Java 程序的过程中会把它管理的内存划分成若干个不同的数据区域。</p>
+<p>1.8之前：<br><img src="https://img-blog.csdnimg.cn/20190605194151762.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>1.8之后：<br><img src="https://img-blog.csdnimg.cn/2019060519421961.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>我们可以把它们分为两个类型的区域，一种是线程私有的，另一种是线程共享的。</p>
+<ul>
+<li>线程共享的区域：<ul>
+<li>堆（Heap）</li>
+<li>方法区（Method Area）</li>
+</ul>
+</li>
+<li>线程私有：<ul>
+<li>程序计数器（PC)</li>
+<li>虚拟机栈（VM Stack）</li>
+<li>本地方法栈（Native Method Stack）</li>
+</ul>
+</li>
+</ul>
+<h3 id="2-1-程序计数器（Program-Counter）："><a href="#2-1-程序计数器（Program-Counter）：" class="headerlink" title="2.1 程序计数器（Program Counter）："></a>2.1 程序计数器（Program Counter）：</h3><p> 可以看作是当前线程所执行的字节码的行号指示器，他标记着我们当前执行到了哪一条指令。类比我们计算机组成中的PC计数器，他实现着我们代码的控制流程。<br>在多线程的情况下，程序计数器用于记录当前线程执行的位置，从而当线程被切换回来的时候能够知道该线程上次运行到哪儿了。</p>
+<h3 id="2-2-Java虚拟机栈（Stack）"><a href="#2-2-Java虚拟机栈（Stack）" class="headerlink" title="2.2 Java虚拟机栈（Stack）"></a>2.2 Java虚拟机栈（Stack）</h3><p>与程序计数器一样，Java虚拟机栈也是线程私有的，它的生命周期和线程相同，描述的是 Java 方法执行的内存模型，每次方法调用的数据都是通过栈传递的。<br>Java 内存可以粗糙的区分为堆内存（Heap）和栈内存(Stack),其中栈就是现在说的虚拟机栈，或者说是虚拟机栈中局部变量表部分。 （实际上，Java虚拟机栈是由一个个栈帧组成，而每个栈帧中都拥有：局部变量表、操作数栈、动态链接、方法出口信息。）</p>
+<p>局部变量表主要存放了编译器可知的<strong>各种数据类型</strong>（boolean、byte、char、short、int、float、long、double）、<strong>对象引用</strong>（reference类型，它不同于对象本身，可能是一个指向对象起始地址的引用指针，也可能是指向一个代表对象的句柄或其他与此对象相关的位置）。</p>
+<p><strong>Java 虚拟机栈会出现两种异常：StackOverFlowError 和 OutOfMemoryError。</strong></p>
+<ul>
+<li>StackOverFlowError ：若 Java 虚拟机栈的内存大小不允许动态扩展，那么当线程请求栈的深度超过当前 Java 虚拟机栈的最大深度的时候，就抛出 StackOverFlowError 异常。</li>
+</ul>
+<p>程序实现SOF：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">StackOverFlow</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">int</span> stackSize = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">stackIncre</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        stackSize++;</span><br><span class="line">        stackIncre();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Throwable</span>&#123;</span><br><span class="line">        StackOverFlow sof = <span class="keyword">new</span> StackOverFlow();</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            sof.stackIncre();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">            System.out.println(sof.stackSize);</span><br><span class="line">            <span class="keyword">throw</span> e;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>OutOfMemery：若 Java 虚拟机栈的内存大小允许动态扩展，且当线程请求栈时内存用完了，无法再动态扩展了，此时抛出 OutOfMemoryError 异常。<br>程序实现OOM：<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">OutOfMemory</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span>&#123;</span><br><span class="line">        List list=<span class="keyword">new</span> ArrayList();</span><br><span class="line">        <span class="keyword">for</span>(;;)&#123;</span><br><span class="line">            <span class="keyword">int</span>[] tmp=<span class="keyword">new</span> <span class="keyword">int</span>[<span class="number">1000000</span>];</span><br><span class="line">            list.add(tmp);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<p>Java 虚拟机栈也是线程私有的，每个线程都有各自的 Java 虚拟机栈，而且随着线程的创建而创建，随着线程的死亡而死亡。</p>
+<h4 id="拓展：方法-函数如何调用？"><a href="#拓展：方法-函数如何调用？" class="headerlink" title="拓展：方法/函数如何调用？"></a>拓展：方法/函数如何调用？</h4><p>Java 栈可用类比数据结构中栈，Java 栈中保存的主要内容是栈帧，每一次函数调用都会有一个对应的栈帧被压入 Java 栈，每一个函数调用结束后，都会有一个栈帧被弹出。</p>
+<p>Java 方法有两种返回方式：</p>
+<ol>
+<li>return 语句。</li>
+<li>抛出异常。<br>不管哪种返回方式都会导致栈帧被弹出。</li>
+</ol>
+<h3 id="2-3-Java本地方法栈（Native-Method-Stack）"><a href="#2-3-Java本地方法栈（Native-Method-Stack）" class="headerlink" title="2.3 Java本地方法栈（Native Method Stack）"></a>2.3 Java本地方法栈（Native Method Stack）</h3><p>和虚拟机栈所发挥的作用非常相似，区别是： 虚拟机栈为虚拟机执行 Java 方法 （也就是字节码）服务，而本地方法栈则为虚拟机使用到的 Native 方法服务。 在 HotSpot 虚拟机中和 Java 虚拟机栈合二为一。</p>
+<p>本地方法被执行的时候，在本地方法栈也会创建一个栈帧，用于存放该本地方法的局部变量表、操作数栈、动态链接、出口信息。</p>
+<p>方法执行完毕后相应的栈帧也会出栈并释放内存空间，也会出现 StackOverFlowError 和 OutOfMemoryError 两种异常。</p>
+<h3 id="2-4-堆（Heap）"><a href="#2-4-堆（Heap）" class="headerlink" title="2.4 堆（Heap）"></a>2.4 堆（Heap）</h3><p>Java 虚拟机所管理的内存中最大的一块，Java 堆是所有线程共享的一块内存区域，在虚拟机启动时创建。此内存区域的唯一目的就是存放对象实例，几乎所有的对象实例以及数组都在这里分配内存。<br>Java 堆是垃圾收集器管理的主要区域，因此也被称作GC堆（Garbage Collected Heap）。从垃圾回收的角度，由于现在收集器基本都采用分代垃圾收集算法，所以Java堆还可以细分为：新生代和老年代：在细致一点有：Eden空间、From Survivor、To Survivor空间等。进一步划分的目的是更好地回收内存，或者更快地分配内存。<br><img src="https://img-blog.csdnimg.cn/20190327152912955.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br><strong>在 JDK 1.8中移除整个永久代，取而代之的是一个叫元空间（Metaspace）的区域（永久代使用的是JVM的堆内存空间，而元空间使用的是物理内存，直接受到本机的物理内存限制）。</strong></p>
+<h3 id="2-5-方法区（Method-Area-Non-Heap"><a href="#2-5-方法区（Method-Area-Non-Heap" class="headerlink" title="2.5 方法区（Method Area/Non-Heap)"></a>2.5 方法区（Method Area/Non-Heap)</h3><p>方法区与 Java 堆一样，是各个线程共享的内存区域，它用于存储已被虚拟机加载的类信息、常量、静态变量、即时编译器编译后的代码等数据。虽然Java虚拟机规范把方法区描述为堆的一个逻辑部分，但是它却有一个别名叫做 Non-Heap（非堆），目的应该是与 Java 堆区分开来。<br>HotSpot 虚拟机中方法区也常被称为 “永久代”，本质上两者并不等价。仅仅是因为 HotSpot 虚拟机设计团队用永久代来实现方法区而已，这样 HotSpot 虚拟机的垃圾收集器就可以像管理 Java 堆一样管理这部分内存了。但是这并不是一个好主意，因为这样更容易遇到内存溢出问题。</p>
+<h4 id="2-5-1-方法区和永久代的关系"><a href="#2-5-1-方法区和永久代的关系" class="headerlink" title="2.5.1 ==方法区和永久代的关系=="></a>2.5.1 ==方法区和永久代的关系==</h4><p>《Java 虚拟机规范》只是规定了有方法区这么个概念和它的作用，并没有规定如何去实现它。那么，在不同的 JVM 上方法区的实现肯定是不同的了。 方法区和永久代的关系很像 Java 中接口和类的关系，类实现了接口，而永久代就是 HotSpot 虚拟机对虚拟机规范中方法区的一种实现方式。 也就是说，永久代是 HotSpot 的概念，方法区是 Java 虚拟机规范中的定义，是一种规范，而永久代是一种实现，一个是标准一个是实现，其他的虚拟机实现并没有永久带这一说法。</p>
+<h4 id="2-5-2-常用参数"><a href="#2-5-2-常用参数" class="headerlink" title="2.5.2 常用参数"></a>2.5.2 常用参数</h4><p>JDK 1.8 之前永久代还没被彻底移除的时候通常通过下面这些参数来调节方法区大小</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">-XX:PermSize=N <span class="comment">//方法区 (永久代) 初始大小</span></span><br><span class="line">-XX:MaxPermSize=N <span class="comment">//方法区 (永久代) 最大大小,超过这个值将会抛出 OutOfMemoryError 异常:java.lang.OutOfMemoryError: PermGen</span></span><br></pre></td></tr></table></figure>
+
+<p>==相对而言，垃圾收集行为在这个区域是比较少出现的，但并非数据进入方法区后就“永久存在”了。==</p>
+<p>JDK 1.8 的时候，方法区（HotSpot 的永久代）被彻底移除了（JDK1.7 就已经开始了），取而代之是元空间，元空间使用的是直接内存。</p>
+<p>下面是一些常用参数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">-XX:MetaspaceSize=N <span class="comment">//设置 Metaspace 的初始（和最小大小）</span></span><br><span class="line">-XX:MaxMetaspaceSize=N <span class="comment">//设置 Metaspace 的最大大小</span></span><br></pre></td></tr></table></figure>
+
+<p>与永久代很大的不同就是，如果不指定大小的话，随着更多类的创建，虚拟机会耗尽所有可用的系统内存。</p>
+<h4 id="2-5-3-为什么要将永久代-PermGen-替换为元空间-MetaSpace-呢"><a href="#2-5-3-为什么要将永久代-PermGen-替换为元空间-MetaSpace-呢" class="headerlink" title="2.5.3 ==为什么要将永久代 (PermGen) 替换为元空间 (MetaSpace) 呢?=="></a>2.5.3 ==为什么要将永久代 (PermGen) 替换为元空间 (MetaSpace) 呢?==</h4><p>整个永久代有一个 JVM 本身设置固定大小上线，无法进行调整，而元空间使用的是直接内存，受本机可用内存的限制，并且永远不会得到 java.lang.OutOfMemoryError。你可以使用 -XX：MaxMetaspaceSize 标志设置最大元空间大小，默认值为 unlimited，这意味着它只受系统内存的限制。-XX：MetaspaceSize 调整标志定义元空间的初始大小如果未指定此标志，则 Metaspace 将根据运行时的应用程序需求动态地重新调整大小。</p>
+<h3 id="2-6-运行时常量池"><a href="#2-6-运行时常量池" class="headerlink" title="2.6 运行时常量池"></a>2.6 运行时常量池</h3><p> <strong>==jdk1.6、1.7、1.8实际上运行时常量池的位置都发生了很大的变化，jdk1.6运行时常量池存在于方法区，jdk1.7移到了堆区，而jdk1.8运行时常量池其实是存在于与方法区和堆区相对独立的元空间，而不是在堆区。==</strong><br>运行时常量池是方法区的一部分。Class 文件中除了有类的版本、字段、方法、接口等描述信息外，还有常量池信息（用于存放编译期生成的各种字面量和符号引用）<br><img src="https://img-blog.csdnimg.cn/20190605194340336.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>既然运行时常量池时方法区的一部分，自然受到方法区内存的限制，当常量池无法再申请到内存时会抛出 OutOfMemoryError 异常。</p>
+<h4 id="拓展：字符串常量池和运行时常量池什么关系？"><a href="#拓展：字符串常量池和运行时常量池什么关系？" class="headerlink" title="拓展：字符串常量池和运行时常量池什么关系？"></a>拓展：字符串常量池和运行时常量池什么关系？</h4><ul>
+<li>运行时常量池存在于内存中，也就是class常量池被加载到内存之后的版本，不同之处是：它的字面量可以动态的添加，符号引用可以被解析为直接引用</li>
+<li>JVM在执行某个类的时候，必须经过加载、连接、初始化，而连接又包括验证、准备、解析三个阶段。而当类加载到内存中后，jvm就会将class常量池中的内容存放到运行时常量池中，由此可知，运行时常量池也是每个类都有一个。在解析阶段，会把符号引用替换为直接引用，解析的过程会去查询字符串常量池，也就是我们上面所说的StringTable，以保证运行时常量池所引用的字符串与字符串常量池中是一致的。</li>
+</ul>
+<p>除此之外，常量池还有class constant pool<br>推荐阅读：<a href="https://blog.csdn.net/qq_26222859/article/details/73135660" target="_blank" rel="noopener">字符串常量池、class常量池和运行时常量池</a></p>
+<h3 id="2-7-直接内存"><a href="#2-7-直接内存" class="headerlink" title="2.7 直接内存"></a>2.7 直接内存</h3><p>直接内存并不是虚拟机运行时数据区的一部分，也不是虚拟机规范中定义的内存区域，但是这部分内存也被频繁地使用。而且也可能导致OutOfMemoryError异常出现。<br>JDK1.4中新加入的 NIO(New Input/Output) 类，引入了一种基于通道（Channel） 与缓存区（Buffer） 的 I/O 方式，它可以直接使用Native函数库直接分配堆外内存，然后通过一个存储在 Java 堆中的 DirectByteBuffer 对象作为这块内存的引用进行操作。这样就能在一些场景中显著提高性能，因为避免了在 Java 堆和 Native 堆之间来回复制数据。<br>本机直接内存的分配不会收到 Java 堆的限制，但是，既然是内存就会受到本机总内存大小以及处理器寻址空间的限制。</p>
+<h2 id="三、补充内容"><a href="#三、补充内容" class="headerlink" title="三、补充内容*"></a>三、补充内容*</h2><h3 id="3-1-String-对象的两种创建方式："><a href="#3-1-String-对象的两种创建方式：" class="headerlink" title="3.1  String 对象的两种创建方式："></a>3.1  String 对象的两种创建方式：</h3><p>就是我们上面（一）中的str1和str2两种创建string类型的方式。<strong>第一种方式是在常量池中拿对象，第二种方式是直接在堆内存空间创建一个新的对象</strong><br><img src="https://img-blog.csdnimg.cn/20190327161244682.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
+<h3 id="3-2-String-类型的常量池比较特殊。"><a href="#3-2-String-类型的常量池比较特殊。" class="headerlink" title="3.2  String 类型的常量池比较特殊。"></a>3.2  String 类型的常量池比较特殊。</h3><p>它的主要使用方法有两种：**</p>
+<ul>
+<li>用双引号声明出来的 String 对象会直接存储在常量池中。</li>
+<li>如果不是用双引号声明的 String 对象，可以使用 String 提供的 intern 方String.intern() 是一个 Native 方法，它的作用是：如果运行时常量池中已经包含一个等于此 String 对象内容的字符串，则返回常量池中该字符串的引用；如果没有，则在常量池中创建与此 String 内容相同的字符串，并返回常量池中创建的字符串的引用。</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">String s1 = <span class="keyword">new</span> String(<span class="string">"计算机"</span>);</span><br><span class="line">      String s2 = s1.intern();</span><br><span class="line">      String s3 = <span class="string">"计算机"</span>;</span><br><span class="line">      System.out.println(s2);<span class="comment">//计算机</span></span><br><span class="line">      System.out.println(s1 == s2);<span class="comment">//false，因为一个是堆内存中的String对象一个是常量池中的String对象，</span></span><br><span class="line">      System.out.println(s3 == s2);<span class="comment">//true，因为两个都是常量池中的String对</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="3-3-String-字符串拼接"><a href="#3-3-String-字符串拼接" class="headerlink" title="3.3  String 字符串拼接"></a>3.3  String 字符串拼接</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">String str1 = <span class="string">"str"</span>;</span><br><span class="line">String str2 = <span class="string">"ing"</span>;</span><br><span class="line"></span><br><span class="line">String str3 = <span class="string">"str"</span> + <span class="string">"ing"</span>;<span class="comment">//常量池中的对象</span></span><br><span class="line">String str4 = str1 + str2; <span class="comment">//在堆上创建的新的对象	  </span></span><br><span class="line">String str5 = <span class="string">"string"</span>;<span class="comment">//常量池中的对象</span></span><br><span class="line">System.out.println(str3 == str4);<span class="comment">//false</span></span><br><span class="line">System.out.println(str3 == str5);<span class="comment">//true</span></span><br><span class="line">System.out.println(str4 == str5);<span class="comment">//false</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-blog.csdnimg.cn/20190327161533151.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70" alt><br>尽量避免多个字符串拼接，因为这样会重新创建对象。如果需要改变字符串的花，可以使用 StringBuilder 或者 StringBuffer。</p>
+<h3 id="3-4-String-s1-new-String-“abc”-这句话创建了几个字符串对象？"><a href="#3-4-String-s1-new-String-“abc”-这句话创建了几个字符串对象？" class="headerlink" title="3.4 String s1 = new String(“abc”);这句话创建了几个字符串对象？"></a>3.4 String s1 = new String(“abc”);这句话创建了几个字符串对象？</h3><p>将创建 1 或 2 个字符串。如果池中已存在字符串文字“abc”，则池中只会创建一个字符串“s1”。如果池中没有字符串文字“abc”，那么它将首先在池中创建，然后在堆空间中创建，因此将创建总共 2 个字符串对象。</p>
+<p>验证：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">String s1 = new String(&quot;abc&quot;);// 堆内存的地址值</span><br><span class="line">		String s2 = &quot;abc&quot;;</span><br><span class="line">		System.out.println(s1 == s2);// 输出 false,因为一个是堆内存，一个是常量池的内存，故两者是不同的。</span><br><span class="line">		System.out.println(s1.equals(s2));// 输出 true</span><br></pre></td></tr></table></figure>
+
+<p>结果：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">false</span><br><span class="line">true</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-5-八种基本数据类型，基本类型的包装类和常量池"><a href="#3-5-八种基本数据类型，基本类型的包装类和常量池" class="headerlink" title="3.5 八种基本数据类型，基本类型的包装类和常量池"></a>3.5 八种基本数据类型，基本类型的包装类和常量池</h3><p>关于包装类的知识推荐阅读：<a href="https://blog.csdn.net/qq_31749835/article/details/88662590" target="_blank" rel="noopener">[Java基础] Java包装类及自动装箱、拆箱</a></p>
+<br>
+基本数据类型（String不是基本数据类型）的数据保存在stack中，如目录（一）中的b保存在栈中，10也保存在stack中，然后由b指向10
+
+<ul>
+<li><strong>Java 基本类型的包装类的大部分都实现了常量池技术，即Byte,Short,Integer,Long,Character,Boolean；这5种包装类默认创建了数值[-128，127]的相应类型的缓存数据，但是超出此范围仍然会去创建新的对象。</strong></li>
+<li><strong>两种浮点数类型的包装类 Float,Double 并没有实现常量池技术</strong></li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">Integer i1 = <span class="number">33</span>;</span><br><span class="line">Integer i2 = <span class="number">33</span>;</span><br><span class="line">System.out.println(i1 == i2);<span class="comment">// 输出true</span></span><br><span class="line">Integer i11 = <span class="number">333</span>;</span><br><span class="line">Integer i22 = <span class="number">333</span>;</span><br><span class="line">System.out.println(i11 == i22);<span class="comment">// 输出false</span></span><br><span class="line">Double i3 = <span class="number">1.2</span>;</span><br><span class="line">Double i4 = <span class="number">1.2</span>;</span><br><span class="line">System.out.println(i3 == i4);<span class="comment">// 输出false</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>Integer缓存源代码</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">*此方法将始终缓存-128到127（包括端点）范围内的值，并可以缓存此范围之外的其他值。</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Integer <span class="title">valueOf</span><span class="params">(<span class="keyword">int</span> i)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (i &gt;= IntegerCache.low &amp;&amp; i &lt;= IntegerCache.high)</span><br><span class="line">            <span class="keyword">return</span> IntegerCache.cache[i + (-IntegerCache.low)];</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> Integer(i);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>Integer i1=40；Java 在编译的时候会直接将代码封装成Integer i1=Integer.valueOf(40);，从而使用常量池中的对象。</li>
+<li>Integer i1 = new Integer(40);这种情况下会创建新的对象。</li>
+</ol>
+<p><strong>Integer比较更丰富的一个例子:</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">Integer i1 = <span class="number">40</span>;</span><br><span class="line">  Integer i2 = <span class="number">40</span>;</span><br><span class="line">  Integer i3 = <span class="number">0</span>;</span><br><span class="line">  Integer i4 = <span class="keyword">new</span> Integer(<span class="number">40</span>);</span><br><span class="line">  Integer i5 = <span class="keyword">new</span> Integer(<span class="number">40</span>);</span><br><span class="line">  Integer i6 = <span class="keyword">new</span> Integer(<span class="number">0</span>);</span><br><span class="line">  </span><br><span class="line">  System.out.println(<span class="string">"i1=i2   "</span> + (i1 == i2));</span><br><span class="line">  System.out.println(<span class="string">"i1=i2+i3   "</span> + (i1 == i2 + i3));</span><br><span class="line">  System.out.println(<span class="string">"i1=i4   "</span> + (i1 == i4));</span><br><span class="line">  System.out.println(<span class="string">"i4=i5   "</span> + (i4 == i5));</span><br><span class="line">  System.out.println(<span class="string">"i4=i5+i6   "</span> + (i4 == i5 + i6));   </span><br><span class="line">  System.out.println(<span class="string">"40=i5+i6   "</span> + (<span class="number">40</span> == i5 + i6));</span><br></pre></td></tr></table></figure>
+
+<p>运行结果：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">i1=i2   <span class="keyword">true</span></span><br><span class="line">i1=i2+i3   <span class="keyword">true</span></span><br><span class="line">i1=i4   <span class="keyword">false</span></span><br><span class="line">i4=i5   <span class="keyword">false</span></span><br><span class="line">i4=i5+i6   <span class="keyword">true</span></span><br><span class="line"><span class="number">40</span>=i5+i6   <span class="keyword">true</span></span><br></pre></td></tr></table></figure>
+
+<p>语句i4 == i5 + i6，因为+这个操作符不适用于Integer对象，首先i5和i6进行自动拆箱操作，进行数值相加，即i4 == 40。然后Integer对象无法与数值进行直接比较，所以i4自动拆箱转为int值40，最终这条语句转为40 == 40进行数值比较。</p>
+<h2 id="四、总结"><a href="#四、总结" class="headerlink" title="四、总结"></a>四、总结</h2><p>我们平时讨论最多的是stack栈内存和heap堆内存，再次对数据类型在内存中的存储问题来解释一下：</p>
+<ol>
+<li><p><strong>在==方法中声明==的变量，即该变量是局部变量，每当程序调用方法时，系统都会为该方法建立一个方法栈，其所在方法中声明的变量就放在方法栈中，当方法结束系统会释放方法栈，其对应在该方法中声明的变量随着栈的销毁而结束，这就局部变量只能在方法中有效的原因</strong></p>
+<p>   在方法中声明的变量可以是基本类型的变量，也可以是引用类型的变量。</p>
+<ul>
+<li>当声明是基本类型的变量的时，其变量名及值（变量名及值是两个概念）是放在JAVA虚拟机栈中</li>
+<li>当声明的是引用变量时，所声明的变量的reference（该变量实际上是在方法中存储的是内存地址值）是放在JAVA虚拟机的栈中，该变量所指向的对象是放在堆类存中的。</li>
+</ul>
+<ol start="2">
+<li><strong>在 ==类中声明== 的变量是成员变量，也叫全局变量，放在堆中的（因为全局变量不会随着某个方法执行结束而销毁）。</strong><br>同样在类中声明的变量即可是基本类型的变量 也可是引用类型的变量</li>
+</ol>
+</li>
+</ol>
+<ul>
+<li>当声明的是基本类型的变量其变量名及其值放在堆内存中的</li>
+<li>引用类型时，其声明的变量仍然会存储一个内存地址值，该内存地址值指向所引用的对象。引用变量名和对应的对象仍然存储在相应的堆中</li>
+</ul>
+<p><br><br><br></p>
+<blockquote>
+<p>参考：<a href="https://juejin.im/post/5b7d69e4e51d4538ca5730cb#heading-18" target="_blank" rel="noopener">https://juejin.im/post/5b7d69e4e51d4538ca5730cb#heading-18</a><br><a href="http://tangxman.github.io/2015/07/27/the-difference-of-java-string-pool/" target="_blank" rel="noopener">http://tangxman.github.io/2015/07/27/the-difference-of-java-string-pool/</a><br><a href="https://blog.csdn.net/zm13007310400/article/details/77534349" target="_blank" rel="noopener">https://blog.csdn.net/zm13007310400/article/details/77534349</a><br><a href="https://blog.csdn.net/jingjbuer/article/details/46348667" target="_blank" rel="noopener">https://blog.csdn.net/jingjbuer/article/details/46348667</a></p>
+</blockquote>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/16/有关Java浮点数的一个有趣的例子以及一个尚未解决的疑惑（java在存储float值时采用的什么策略,是否存在舍入优化？）/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="KevinLyz">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Kevinlyz">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/07/16/有关Java浮点数的一个有趣的例子以及一个尚未解决的疑惑（java在存储float值时采用的什么策略,是否存在舍入优化？）/" itemprop="url">Untitled</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
             
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-16T10:47:38+08:00">
+                2019-07-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="有关Java浮点数精度丢失的一个有趣的例子以及尚未解决的疑惑"><a href="#有关Java浮点数精度丢失的一个有趣的例子以及尚未解决的疑惑" class="headerlink" title="有关Java浮点数精度丢失的一个有趣的例子以及尚未解决的疑惑"></a>有关Java浮点数精度丢失的一个有趣的例子以及尚未解决的疑惑</h1><p>本文章重点在于表述最后的例子和尚未解决的疑问，故对于浮点数相关概念只是简单进行叙述</p>
+<h2 id="一、浮点数的存储模式"><a href="#一、浮点数的存储模式" class="headerlink" title="一、浮点数的存储模式"></a>一、浮点数的存储模式</h2><p>Java 语言支持两种基本的浮点类型： float 和 double 。java 的浮点类型都依据 IEEE 754 标准。IEEE 754 定义了32 位和 64 位双精度两种浮点二进制小数标准。</p>
+<p>IEEE 754 用科学记数法以底数为 2 的小数来表示浮点数。</p>
+<p>对于32 位浮点数float用 第1 位表示数字的符号，用第2至9位来表示指数，用 最后23 位来表示尾数，即小数部分。</p>
+<ul>
+<li>float(32位):<br><img src="https://img-blog.csdnimg.cn/20190323183805837.jpg" alt="float"></li>
+</ul>
+<p>对于64 位双精度浮点数，用 第1 位表示数字的符号，用 11 位表示指数，52 位表示尾数。</p>
+<ul>
+<li>double(64位):<br><img src="https://img-blog.csdnimg.cn/20190323183825716.jpg" alt="double"></li>
+</ul>
+<p>(1)一个单独的符号位s 直接编码符号s 。</p>
+<p>(2)k 位的幂指数E ，移码表示 。</p>
+<p>(3)n 位的小数，原码表示 。</p>
+<p><strong>底数部分</strong>　使用２进制数来表示此浮点数的实际值。<br><strong>指数部分</strong>　占用８-bit的二进制数，可表示数值范围为0－255。　但是指数应可正可负，所以IEEE规定，此处算出的次方须减去127才是真正的指数。所以float的指数可从 -126到128.<br>底数部分实际是占用24-bit的一个值，由于其最高位始终为 1 ，所以最高位省去不存储，在存储中只有23-bit。</p>
+<ul>
+<li><p>规格化（标准化）与移位<br>（以float为例进行阐述）<br>规格化的原因：在存储时，需要进行规格化操作，使用尾数来存储数值信息，而指数部分只记录偏移量，所以进行规格化之后能够统一存储格式</p>
+</li>
+<li><p>移位原因：<br>根据IEEE 754标准，需要在指数部分+127<br>指数有正有负，+127之后统一存储为正数，节省一位有效位</p>
+<h2 id="二、什么时候出现无法表示？"><a href="#二、什么时候出现无法表示？" class="headerlink" title="二、什么时候出现无法表示？"></a>二、什么时候出现无法表示？</h2><p>任何一个浮点数字，在底层表示都必须转换成这种科学计数法来表示，那么我们来想想看什么时候这个数字会无法表示呢？那么只有两种情形：</p>
+</li>
+</ul>
+<ol>
+<li><p>幂数不够表示了：这种情况往往出现在数字太大了，超过幂数所能承受的范围，那么这个数字就无法表示了。如幂数最大只能是10，但是这个数字用科学计数法表示时，幂数一定会超过10，就没办法了。</p>
+</li>
+<li><p>尾数不够表示了：这种情况往往出现在数字精度太长了，如1.3434343233332这样的数字，虽然很小，还不超过2，这种情况下幂数完全满足要求，但是尾数已经不能表示出来了这么长的精度。</p>
+</li>
+</ol>
+<h2 id="三、表示范围及有效位"><a href="#三、表示范围及有效位" class="headerlink" title="三、表示范围及有效位"></a>三、表示范围及有效位</h2><ul>
+<li>float的范围为-2^128 ~ +2^127，也即-3.40E+38 ~ +3.40E+38<ul>
+<li>double的范围为-2^1024 ~ +2^1023，也即-1.79E+308 ~ +1.79E+308</li>
+</ul>
+</li>
+</ul>
+<h2 id="四、例子及疑惑"><a href="#四、例子及疑惑" class="headerlink" title="四、例子及疑惑"></a>四、例子及疑惑</h2><p>在上课的时候，随意瞎敲了一个例子，根据二进制转换想要理解浮点数的存储过程，计算得到的32bit的结果进行比对，发现有一位是不同的，原以为输出该是false，可输出的结果却是true。这是在是让人不解<br><strong>例子</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">float</span> d = <span class="number">10.0000005f</span>;</span><br><span class="line"><span class="keyword">float</span> f = <span class="number">10.000001f</span>;</span><br><span class="line"></span><br><span class="line">System.out.println(<span class="string">"(d=10.0000005) == (f=10.000001) ? "</span>+(d == f));</span><br></pre></td></tr></table></figure>
+
+<p>运行结果为：true</p>
+<p>可能第一反应就是  丢精度了呗，最后精度丢了呗，有啥稀奇的。当时我也是这么想的，接下来我们手动进行一下二进制存储的转换</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">d = <span class="number">10.0000005</span></span><br><span class="line">直接准换为二进制：</span><br><span class="line"><span class="number">1010.0000000000000000000010000110001101111011110100001</span></span><br><span class="line">进行规格化,移动三位 E11</span><br><span class="line"><span class="number">1.0100000000000000000000010000110001101111011110100001</span> E11</span><br><span class="line">根据IEEE <span class="number">754</span>标准 指数+<span class="number">127</span>，为</span><br><span class="line">	<span class="number">00000011</span></span><br><span class="line">   +<span class="number">01111111</span></span><br><span class="line">   ———————————</span><br><span class="line">   	<span class="number">10000010</span></span><br><span class="line">加上符号位 <span class="number">0</span> </span><br><span class="line">存储内容应为(尾数取后<span class="number">23</span>位）：</span><br><span class="line"><span class="number">0</span>  <span class="number">10000010</span>  <span class="number">01000000000000000000000</span>    《--<span class="number">10.0000005f</span> </span><br><span class="line"></span><br><span class="line"></span><br><span class="line">f = <span class="number">10.000001</span></span><br><span class="line">直接准换为二进制：</span><br><span class="line"><span class="number">1010.0000000000000000000100001100011011110111101000001</span></span><br><span class="line">进行规格化,移动三位 E11</span><br><span class="line"><span class="number">1.0100000000000000000000100001100011011110111101000001</span> E11</span><br><span class="line">根据IEEE <span class="number">754</span>标准 指数+<span class="number">127</span>，为</span><br><span class="line">	<span class="number">00000011</span></span><br><span class="line">   +<span class="number">01111111</span></span><br><span class="line">   ———————————</span><br><span class="line">   	<span class="number">10000010</span></span><br><span class="line">加上符号位 <span class="number">0</span> </span><br><span class="line">存储内容应为（尾数取后<span class="number">23</span>位）：</span><br><span class="line"><span class="number">0</span> <span class="number">10000010</span> <span class="number">01000000000000000000001</span>   《--<span class="number">10.000001f</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">然后进行对比：</span><br><span class="line"><span class="number">0</span>  <span class="number">10000010</span>  <span class="number">01000000000000000000000</span>    《--<span class="number">10.0000005f</span> </span><br><span class="line"><span class="number">0</span>  <span class="number">10000010</span>  <span class="number">01000000000000000000001</span>    《--<span class="number">10.000001f</span></span><br></pre></td></tr></table></figure>
+
+<p>？？？？？问题来了，这tm，判断结果是true？嗯？？？？<br>哈哈哈，不对啊，32bit最后一位存进去，一个是0，一个是1，结果是 true???<br>ei？不太对啊这个。</p>
+<p><strong>然后直接转成二进制来一把：</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span>&#123;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">float</span> d = <span class="number">10.0000005f</span>;</span><br><span class="line">		<span class="keyword">float</span> f = <span class="number">10.000001f</span>;</span><br><span class="line"></span><br><span class="line">		<span class="comment">//System.out.println("(d=10.0000005) == (f=10.000001) ? "+(d == f));</span></span><br><span class="line">		</span><br><span class="line">		<span class="keyword">int</span> k = Float.floatToIntBits(f);</span><br><span class="line">		System.out.println(Integer.toBinaryString(k));</span><br><span class="line">		k = Float.floatToIntBits(d);</span><br><span class="line">		System.out.println(Integer.toBinaryString(k));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>结果：<br><img src="https://img-blog.csdnimg.cn/20190323193821493.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>emmmm，这几个意思？？？</p>
+<p><strong>没招了，再debug一把？</strong><br><img src="https://img-blog.csdnimg.cn/20190323193542590.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
+<p>阿嘞??  debug出来d的值就是10.000001，f的值还是10.000001。<br>难道是在存储的时候被四舍五入掉了？所以才会返回true吗？？可是这个进的一位是从哪来的？jvm是怎么进行的取舍呢？这里面究竟是怎么个一个情况呢？？？<br>如果有大佬看到了这里，并且了解相关的内容，一定要来帮我解解惑啊<del>~</del></p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/16/Spring IoC概念理解、Spring对Bean的管理方式和几种注入方法的分析/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="KevinLyz">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Kevinlyz">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/07/16/Spring IoC概念理解、Spring对Bean的管理方式和几种注入方法的分析/" itemprop="url">Untitled</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-16T10:47:32+08:00">
+                2019-07-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="Spring-IoC概念理解、Spring对Bean的管理方式和几种注入方法的分析"><a href="#Spring-IoC概念理解、Spring对Bean的管理方式和几种注入方法的分析" class="headerlink" title="Spring IoC概念理解、Spring对Bean的管理方式和几种注入方法的分析"></a>Spring IoC概念理解、Spring对Bean的管理方式和几种注入方法的分析</h1><h2 id="一、核心概念"><a href="#一、核心概念" class="headerlink" title="一、核心概念"></a>一、核心概念</h2><ul>
+<li><p>IOC： 控制反转( Inversion of Control)/依赖注入(Dependency Injection) ：<br>由Spring容器负责对象的生命周期和对象之间的依赖关系<br>如何理解控制反转？</p>
+</li>
+<li><p>谁控制谁？ IOC容器控制对象。<br>传统的开发模式，我们都是采用直接new对象的方式来创建对象，每个依赖的对象都由自己进行控制。但是有了IOC容器后，则直接由IOC容器来进行控制。IOC容器可以类似的理解为房产的中介，管理着许多房产的资料，如果想要租房或者买房，直接从中介那里获取信息，将原来的主动寻找信息转变为了从指定的地方获取。原来是需要什么东西自己去拿，现在是需要什么东西让别人（IOC Service Provider）送过来</p>
+</li>
+<li><p>谁被控制？<br>对象被控制。被IOC容器控制</p>
+</li>
+<li><p>为什么叫反转？<br>正： 自己创建对象，自己进行对象管理<br>反转： 所依赖的对象直接由IoC容器创建后注入到被注入的对象中，所依赖的对象的获取方式发生了反转</p>
+</li>
+<li><p>什么被反转了？<br>所依赖的对象的获取方式被反转了</p>
+<h2 id="二、Spring加载Bean的过程"><a href="#二、Spring加载Bean的过程" class="headerlink" title="二、Spring加载Bean的过程"></a>二、Spring加载Bean的过程</h2><p>Spring 容器直接管理的对象称之为 bean，其加载过程分为读取定义、根据定义加载两部分:</p>
+</li>
+<li><p>获得 bean 的定义: BeanFactory 使用 BeanDefinitionReader 加载 BeanDefinition 到 BeanDefinitionRegistry 进行注册。</p>
+</li>
+<li><p>加载 bean: 调用 BeanFacotry 的 getBean 方法时，根据 BeanDefinition 来加载对应的 Bean。<br>在加载 bean 的过程中，AbastractBeanFactory 作为 BeanFactory 接口的抽象实现，将 BeanFactory 的 getBean 操作委托到了内部的 doGetBean 方法。doGetBean 内部进行各种逻辑判断（是否注册过、是否已经初始化过、依赖的 bean 是否已经加载等）后，调用 creatBean 进行 bean 的创建。creatBean 是一个抽象方法，这里来看一下 AbstractAutowireCapableBeanFactory 中的具体实现。 AbstractAutowireCapableBeanFactory 的 createBean 方法在真正创建前，会先调用 resolveBeforeInstantiation 来处理需要 AOP 增强的 bean，如果该方法返回了代理后的 bean，则直接返回该 bean。</p>
+<h2 id="三、注入方式"><a href="#三、注入方式" class="headerlink" title="三、注入方式"></a>三、注入方式</h2><p>IoC的注入方式总共有如下几种：</p>
+</li>
+</ul>
+<ol>
+<li><strong>构造器注入</strong></li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Controller</span></span><br><span class="line">pulic <span class="class"><span class="keyword">class</span> <span class="title">YoungMan</span></span>&#123;</span><br><span class="line">	<span class="meta">@Autowired</span></span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> BeautifulGirl beautifulGril;</span><br><span class="line"></span><br><span class="line">	YoungMan(BeautifulGirl beautifulGirl)&#123;</span><br><span class="line">    	    <span class="keyword">this</span>.beautifulGirl = beautifulGirl;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li><strong>setter方式注入</strong></li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Controller</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">YoungMan</span></span>&#123;</span><br><span class="line">	<span class="meta">@Autowired</span></span><br><span class="line">	<span class="keyword">private</span> BeautifulDirl beautiofulGirl;</span><br><span class="line">	</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setBeautifulGirl</span><span class="params">(BeautifulGirl beautifulGirl)</span></span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.beautifulGirl = beautifulGirl;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li><strong>field注入</strong></li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Controller</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">YoungMan</span> </span>&#123;</span><br><span class="line">  <span class="meta">@Autowired</span></span><br><span class="line">  <span class="keyword">private</span> BeautifulGirl beautifGirl;</span><br><span class="line">  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>那么为什么会有三种注入方式呢？</p>
+<ul>
+<li><p>其中field注入的方式是最简介的一种注入方式，也非常符合人的第一逻辑，只要加上@Autowired注解放在实例域上依赖注入就完成了，也不需要去写setter和Constructor。但是使用filed注入的方式存在着几个问题：</p>
+<ul>
+<li><p>一是无法复用该实现类。<br>没有Setter 或有参构造器意味着通过 Field Injection 注入的实例域无法通过常规的手段进行初始化，必须要依赖DI容器。这就意味着这不是一个纯粹的 POJO 了，这个类彻底放弃了对自身依赖的管理。使用者也往往无法清晰的知道正确使用这个类所需要的依赖，而 Setter 或 Construtor 可清晰的告知使用者这个类的依赖。<br>Field Injection 也让我们感觉到注入依赖实在是太容易了，声明下变量，一个注解就搞定了，于是经常导致注入过多的依赖。当一个类依赖了过多其他的类，往往意味着违反了单一职责原则 (Single Responsibility Principle, SRP)。这个类的很多责任应该划分到其他类中，而不是在 DI 的便利下增加其责任。</p>
+</li>
+<li><p>二是会存在循环注入的情况，A-&gt;B，B-&gt;A。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">A</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> B b;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">B</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> A a;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+</li>
+</ul>
+<p>setter注入是在spring3.0刚推出的时候官方推荐的注入方式，当时的原话是：</p>
+<blockquote>
+<p>The Spring team generally advocates setter injection, because large numbers of constructor arguments can get unwieldy, especially when properties are optional. Setter methods also make objects of that class amenable to reconfiguration or re-injection later. Management through JMX MBeans is a compelling use case.<br>Some purists favor constructor-based injection. Supplying all object dependencies means that the object is always returned to client (calling) code in a totally initialized state. The disadvantage is that the object becomes less amenable to reconfiguration and re-injection.</p>
+</blockquote>
+<blockquote>
+<p>翻译过来就是：Spring团队提倡使用setter注入的方式，因为大量的构造器声明会显得臃肿，特别是当属性是可选的时候。setter方法该类的对象在以后能够重新配置或者重新注入。<br>一些人追求构造器注入，他们认为所有的对象依赖意味着这个对象始终以完全初始化的状态返回到调用他的代码。这种方式的缺点是对象不适合重新配置和注入。</p>
+</blockquote>
+<p>其存在的原因不外乎认为setter比较灵活</p>
+<p>但是在Spring4.x之后，官方又开始推荐构造器注入的方式。官方是这么说的：</p>
+<blockquote>
+<p>The Spring team generally advocates constructor injection as it enables one to implement application components as immutable objects and to ensure that required dependencies are not null. Furthermore constructor-injected components are always returned to client (calling) code in a fully initialized state.<br>Spring团队大力提倡（花式秀，之前还提倡setter方式呢）构造器注入的方式，因为啊，这个构造器注入的方式<strong>能够确保注入的组件不可变，并确保所需的依赖不是null</strong>。而且啊，构造器注入的依赖总是能够在返回客户端（组件）代码的时候<strong>保证完全初始化</strong>的状态</p>
+</blockquote>
+<p>构造器注入的方式保证了两点：</p>
+<ul>
+<li>依赖不可变：上例中的final关键字</li>
+<li>依赖不为空：当要初始化实例化YoungMan的时候，由于YoungMan实现了有参数的构造函数，故不会调用默认的无参构造器，此时需要由Spring容器传入所需要的BeautifulGirl，保证所需要依赖的对象不为空。也保证了<strong>完全初始化</strong>。</li>
+</ul>
+<h2 id="四、总结"><a href="#四、总结" class="headerlink" title="四、总结"></a>四、总结</h2><p>我们在使用IOC的时候，首先考虑使用构造器的方式进行注入，但当一个依赖有多个其他的类，使用field注入或者setter注入方式来指定注入的类型或许会方便些。（但是，有多个依赖不一定是好事，此时要注意SRP原则Single Responsibility Principle，过多的职责需要划分到其他的类当中去，而不是在DI的便利下增加其责任。）<br>Spring 官方目前推荐尽量使用构造器注入。</p>
+<ol>
+<li>依赖不可变：因为构造注入可以注入 final域，让依赖更加的不可变。</li>
+<li>依赖不为空：能避免依赖为null的情况。而且如果注入了过多的依赖，构造器也会显得臃肿不堪，会提示开发者注意 SRP 原则。另外，Spring 4.3 版本之后，构造器注入的情况下可以省去 @Autowired 注解，代码可以变得更加纯粹，与框架依赖更少。</li>
+<li>所需依赖被完全初始化</li>
+<li>不存在拟循环依赖<br>当然，Setter 注入方式也有它的优点，在许多情况下还是需要通过 setter 来进行注入的。比如注入一些可选的依赖，或者需要在运行时动态改变的依赖。</li>
+</ol>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/16/Java包装类及自动装箱、拆箱/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="KevinLyz">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Kevinlyz">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/07/16/Java包装类及自动装箱、拆箱/" itemprop="url">Untitled</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-16T10:47:26+08:00">
+                2019-07-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="Java包装类"><a href="#Java包装类" class="headerlink" title="Java包装类"></a>Java包装类</h2><table>
+<thead>
+<tr>
+<th>基本类型</th>
+<th>大小</th>
+<th>包装器类型</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>boolean</td>
+<td>/</td>
+<td>Boolean</td>
+</tr>
+<tr>
+<td>char</td>
+<td>16bit</td>
+<td>Boolean</td>
+</tr>
+<tr>
+<td>byte</td>
+<td>8bit</td>
+<td>Byte</td>
+</tr>
+<tr>
+<td>short</td>
+<td>/16bit</td>
+<td>Short</td>
+</tr>
+<tr>
+<td>int</td>
+<td>32bit</td>
+<td>Integer</td>
+</tr>
+<tr>
+<td>long</td>
+<td>64bit</td>
+<td>Long</td>
+</tr>
+<tr>
+<td>float</td>
+<td>32bit</td>
+<td>Float</td>
+</tr>
+<tr>
+<td>double</td>
+<td>64bit</td>
+<td>Double</td>
+</tr>
+<tr>
+<td>void</td>
+<td>/</td>
+<td>Void</td>
+</tr>
+</tbody></table>
+<p>Java 的包装类有两个主要的目的：</p>
+<ul>
+<li>Java包装类将基本数据类型的值“包装”到对象中，<strong>对基本数据类型的操作变为了对对象进行操作</strong>，从而使基本值能够包含在为对象为保留的操作中。比如向Collections中添加元素（泛型的操作限制加入的只能是对象，比如List<int> = new ArrayList() 的写法是错误的），或者从带对象返回值的方法中返回。</int></li>
+<li>更加<strong>方便类型的转换</strong>，如常见的Integer向字符的转换<h2 id="装箱和拆箱"><a href="#装箱和拆箱" class="headerlink" title="装箱和拆箱"></a>装箱和拆箱</h2>Java 在SE5之后提供了自动的装箱和拆箱机制。基本数据类型可以和与其对应的包装类之间自动进行转换<br>如：</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Integer i = <span class="number">10</span>;</span><br><span class="line"><span class="keyword">int</span> index = i;</span><br></pre></td></tr></table></figure>
+
+<p>装箱就是自动将基本数据类型转换为包装器类型<br>拆箱就是自动将包装器类型装换为基本数据类型</p>
+<p>在装箱的时候自动调用的是Integer的valueOf(int)方法。而在拆箱的时候自动调用的是Integer的intValue方法。</p>
+<p>其他的也类似，比如Double、Character，不相信的朋友可以自己手动尝试一下。</p>
+<p>因此可以用一句话总结装箱和拆箱的实现过程：</p>
+<blockquote>
+<p>装箱过程是通过调用包装器的valueOf方法实现的，而拆箱过程是通过调用包装器的xxxValue方法实现的。（xxx代表对应的基本数据类型）。</p>
+</blockquote>
+<h2 id="面试问题"><a href="#面试问题" class="headerlink" title="面试问题"></a>面试问题</h2><p>下面这段代码的输出结果是什么？</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Main</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        Integer i1 = <span class="number">100</span>;</span><br><span class="line">        Integer i2 = <span class="number">100</span>;</span><br><span class="line">        Integer i3 = <span class="number">200</span>;</span><br><span class="line">        Integer i4 = <span class="number">200</span>;</span><br><span class="line">      </span><br><span class="line">        System.out.println(i1==i2);</span><br><span class="line">        System.out.println(i3==i4);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>注意 ==和equals的区别：</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>==</th>
+<th>equals</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>基本数据类型</td>
+<td>值</td>
+<td>不可用</td>
+</tr>
+<tr>
+<td>包装类</td>
+<td>地址</td>
+<td>内容</td>
+</tr>
+</tbody></table>
+<p>输出的结果为：</p>
+<pre><code>true
+false</code></pre><p>为什么会出现这样的结果？输出结果表明 i1 和 i2 指向的是同一个地址，而 i3 和 i4 指向的是不同的地址。此时只需一看源码便知究竟，下面这段代码是Integer的valueOf方法的具体实现：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Integer <span class="title">valueOf</span><span class="params">(<span class="keyword">int</span> i)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(i &gt;= -<span class="number">128</span> &amp;&amp; i &lt;= IntegerCache.high)</span><br><span class="line">            <span class="keyword">return</span> IntegerCache.cache[i + <span class="number">128</span>];</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> Integer(i);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>从这2段代码可以看出，在通过valueOf方法创建Integer对象的时候，如果数值在 [-128,127] 之间，便返回指向IntegerCache.cache（常量池）中已经存在的引用；否则创建一个新的Integer对象。</p>
+<p>上面的代码中 i1 和 i2 的数值为100，因此会直接从cache（常量池）中取已经存在的对象，所以 i1 和 i2 指向的是同一个对象，而 i3 和 i4 则是分别指向不同的对象。</p>
+<blockquote>
+<p>推荐阅读！：更多关于基本数据类型在内存中存储过程底层的知识请参考另一篇文章：<br><a href="https://blog.csdn.net/qq_31749835/article/details/88847193" target="_blank" rel="noopener">[Java基础]从Java的各种基本数据类型看Java内存区域划分</a></p>
+</blockquote>
+<ul>
+<li>下面这段代码的输出结果是什么？</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Main</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        Double i1 = <span class="number">100.0</span>;</span><br><span class="line">        Double i2 = <span class="number">100.0</span>;</span><br><span class="line">        Double i3 = <span class="number">200.0</span>;</span><br><span class="line">        Double i4 = <span class="number">200.0</span>;</span><br><span class="line">        </span><br><span class="line">        System.out.println(i1==i2);</span><br><span class="line">        System.out.println(i3==i4);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>也许有的朋友会认为跟上面一道题目的输出结果相同，但是事实上却不是。实际输出结果为：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">false</span></span><br><span class="line"><span class="keyword">false</span></span><br></pre></td></tr></table></figure>
+
+<p>至于具体为什么，读者可以去查看Double类的valueOf的实现。</p>
+<p>在这里只解释一下为什么Double类的valueOf方法会采用与Integer类的valueOf方法不同的实现。很简单：在某个范围内的整型数值的个数是有限的，而浮点数却不是。</p>
+<blockquote>
+<p>注意，Integer、Short、Byte、Character、Long这几个类的valueOf方法的实现是类似的，因为他们都实现了常量池技术，Double、Float的valueOf方法的实现是类似的，并没有实现常量池技术。<br>Q：那么为什么这里要将值存储在常量池中呢？<br>A：速度更快，常量池引入的目的是为了避免频繁的创建和销毁对象而影响系统性能，其实现了对象的共享。这是一种 享元模式 的实现。</p>
+</blockquote>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/16/Java注解学习，反射机制获取由注解标记的信息并构建sql查询语句/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="KevinLyz">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Kevinlyz">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/07/16/Java注解学习，反射机制获取由注解标记的信息并构建sql查询语句/" itemprop="url">Untitled</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-16T10:47:20+08:00">
+                2019-07-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="java注解学习笔记"><a href="#java注解学习笔记" class="headerlink" title="java注解学习笔记"></a>java注解学习笔记</h1><h2 id="一、jdk中的注解"><a href="#一、jdk中的注解" class="headerlink" title="一、jdk中的注解"></a>一、jdk中的注解</h2><p>jdk中都属于编译时注解，在编译前就会提示错误，总共有两种注解：</p>
+<ol>
+<li>@Deprecated 注解<br> 表示方法已过时</li>
+<li>@Suppress Warning注解：忽略由Deprecated注解造成的警告</li>
+</ol>
+<h2 id="二、java第三方注解"><a href="#二、java第三方注解" class="headerlink" title="二、java第三方注解"></a>二、java第三方注解</h2><p>这里只列举了Spring和Mybatis中常见的几个</p>
+<ul>
+<li>Spring中的注解<ul>
+<li>@Autowired注解</li>
+<li>@Service注解</li>
+<li>@Repository注解</li>
+</ul>
+</li>
+<li>Mybatis中的注解<ul>
+<li>@InsertProvider</li>
+<li>@UpdateProvider</li>
+<li>@Options</li>
+</ul>
+</li>
+</ul>
+<h2 id="三、注解的分类"><a href="#三、注解的分类" class="headerlink" title="三、注解的分类"></a>三、注解的分类</h2><ul>
+<li>源码注解</li>
+<li>编译时注解</li>
+<li>运行时注解</li>
+<li>元注解：给注解进行注解<ul>
+<li>@Target(ElementType.XXXX)<br>作用：用于描述注解的使用范围（即：被描述的注解可以用在什么地方）<br>　　取值(ElementType)有：<br>　　　　1. CONSTRUCTOR：用于描述构造器<br>　　　　2. FIELD：用于描述域即类成员变量<br>　　　　3. LOCAL_VARIABLE：用于描述局部变量<br>　　　　4. METHOD：用于描述方法<br>　　　　5. PACKAGE：用于描述包<br>　　　　6. PARAMETER：用于描述参数<br>　　　　7. TYPE：用于描述类、接口(包括注解类型) 或enum声明<br>最常用的TYPE(描述类）、METHOD(描述方法）、FIELD(描述成员变量）</li>
+<li>@Retention(RetentionPolicy.RUNTIME)</li>
+<li>Inherited ：是一个标记注解。<br>@Inherited阐述了某个被标注的类型是被继承的。如果一个使用了@Inherited修饰的annotation类型被用于一个class，则这个annotation将被用于该class的子类。<ul>
+<li>Documented ：是一个标记注解，表示可用于javadoc工具的文档化<h2 id="四、自定义注解"><a href="#四、自定义注解" class="headerlink" title="四、自定义注解"></a>四、自定义注解</h2>成员类型是受限的，合法的类型包括原始类型及String, Class, Annotation, Enumeration<br>==同一个类文件只能被同一个类加载器对象加载一次==</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>最简化的注解定义：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Target</span>(&#123; ElementType.TYPE&#125;)   <span class="comment">//定义在类上的注解</span></span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)     <span class="comment">//运行时注解</span></span><br><span class="line"><span class="meta">@Inherited</span>   <span class="comment">//可被继承</span></span><br><span class="line"><span class="meta">@Documented</span>   <span class="comment">//可用于文档化</span></span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> UdfAnnotation &#123;</span><br><span class="line">    <span class="function">String <span class="title">value</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="五、代码实操"><a href="#五、代码实操" class="headerlink" title="五、代码实操"></a>五、代码实操</h2><p>通过反射机制获取由注解标记的信息并构建sql查询语句</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Person实体类，通过Table和Column注解标记表名和列明</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Table</span>(<span class="string">"person"</span>)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Person</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Column</span>(<span class="string">"id"</span>)</span><br><span class="line">    <span class="keyword">private</span> String id;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Column</span>(<span class="string">"name"</span>)</span><br><span class="line">    <span class="keyword">private</span> String name;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Column</span>(<span class="string">"age"</span>)</span><br><span class="line">    <span class="keyword">private</span> Integer age;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getId</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> id;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setId</span><span class="params">(String id)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.id = id;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getName</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setName</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.name = name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Integer <span class="title">getAge</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> age;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setAge</span><span class="params">(Integer age)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.age = age;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">toString</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">"Person&#123;"</span> +</span><br><span class="line">                <span class="string">"id='"</span> + id + <span class="string">'\''</span> +</span><br><span class="line">                <span class="string">", name='"</span> + name + <span class="string">'\''</span> +</span><br><span class="line">                <span class="string">", age="</span> + age +</span><br><span class="line">                <span class="string">'&#125;'</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.lang.annotation.ElementType;</span><br><span class="line"><span class="keyword">import</span> java.lang.annotation.Retention;</span><br><span class="line"><span class="keyword">import</span> java.lang.annotation.RetentionPolicy;</span><br><span class="line"><span class="keyword">import</span> java.lang.annotation.Target;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Column自定义注解</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Target</span>(&#123;ElementType.METHOD, ElementType.FIELD&#125;)</span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> Column &#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">value</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.lang.annotation.ElementType;</span><br><span class="line"><span class="keyword">import</span> java.lang.annotation.Retention;</span><br><span class="line"><span class="keyword">import</span> java.lang.annotation.RetentionPolicy;</span><br><span class="line"><span class="keyword">import</span> java.lang.annotation.Target;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Table自定义注解，用于标记表名</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Target</span>(ElementType.TYPE)</span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> Table &#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">value</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.lang.reflect.Field;</span><br><span class="line"><span class="keyword">import</span> java.lang.reflect.Method;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 测试类，用于从注解中获取信息并构建sql语句</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span>&#123;</span><br><span class="line"></span><br><span class="line">        Person p1 = <span class="keyword">new</span> Person();</span><br><span class="line">        p1.setId(<span class="string">"1"</span>);</span><br><span class="line"></span><br><span class="line">        Person p2 = <span class="keyword">new</span> Person();</span><br><span class="line">        p2.setName(<span class="string">"kevin,lily"</span>);</span><br><span class="line"></span><br><span class="line">        Person p3 = <span class="keyword">new</span> Person();</span><br><span class="line">        p3.setAge(<span class="number">10</span>);</span><br><span class="line"></span><br><span class="line">        String q1 = query(p1);</span><br><span class="line">        String q2 = query(p2);</span><br><span class="line">        String q3 = query(p3);</span><br><span class="line"></span><br><span class="line">        System.out.println(q1);</span><br><span class="line">        System.out.println(q2);</span><br><span class="line">        System.out.println(q3);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> String <span class="title">query</span><span class="params">(Object obj)</span></span>&#123;</span><br><span class="line">        StringBuilder sql = <span class="keyword">new</span> StringBuilder();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            Class c = Class.forName(<span class="string">"com.example.demo.bases.reflect.project.Person"</span>);</span><br><span class="line">            <span class="keyword">if</span> (c.isAnnotationPresent(Table.class))&#123;</span><br><span class="line">                Table table = (Table)c.getAnnotation(Table.class);</span><br><span class="line">                String tableName = table.value();</span><br><span class="line">                <span class="comment">//System.out.println(tableName);</span></span><br><span class="line">                sql.append(<span class="string">"select * from "</span>).append(tableName).append(<span class="string">" where 1=1"</span>);</span><br><span class="line"></span><br><span class="line">                Field[] fields = c.getDeclaredFields();</span><br><span class="line">                <span class="keyword">for</span>(Field field : fields)&#123;</span><br><span class="line">                    String columnName = ((Column)field.getAnnotation(Column.class)).value();</span><br><span class="line">                    <span class="comment">//System.out.println("列名："+columnName);</span></span><br><span class="line"></span><br><span class="line">                    <span class="comment">// 得到方法名，并利用invoke通过方法名获取到参数值</span></span><br><span class="line">                    String methodName = <span class="string">"get"</span>+columnName.substring(<span class="number">0</span>,<span class="number">1</span>).toUpperCase()+columnName.substring(<span class="number">1</span>);</span><br><span class="line">                    <span class="comment">//System.out.println("方法名："+methodName);</span></span><br><span class="line">                    Method method = c.getDeclaredMethod(methodName);</span><br><span class="line">                    Object mValue = method.invoke(obj);</span><br><span class="line">                    <span class="comment">//System.out.println("方法值："+mValue);</span></span><br><span class="line"></span><br><span class="line">                    <span class="keyword">if</span> (mValue <span class="keyword">instanceof</span> Integer)&#123;</span><br><span class="line">                        sql.append(<span class="string">" and "</span>).append(columnName).append(<span class="string">"="</span>).append(mValue);</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">if</span> (mValue <span class="keyword">instanceof</span> String)&#123;</span><br><span class="line">                        <span class="keyword">if</span> (((String) mValue).contains(<span class="string">","</span>))&#123;</span><br><span class="line">                            String[] values = ((String)mValue).split(<span class="string">","</span>);</span><br><span class="line">                            <span class="keyword">for</span> (String value : values)&#123;</span><br><span class="line">                                sql.append(<span class="string">" and "</span>).append(columnName).append(<span class="string">"="</span>).append(<span class="string">"'"</span>).append(value).append(<span class="string">"'"</span>);</span><br><span class="line">                            &#125;</span><br><span class="line">                        &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">                            sql.append(<span class="string">" and "</span>).append(columnName).append(<span class="string">"="</span>).append(<span class="string">"'"</span>).append(mValue).append(<span class="string">"'"</span>);</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;<span class="keyword">catch</span> (Exception e)&#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> sql.toString();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行结果：<br><img src="https://img-blog.csdnimg.cn/20190317100430871.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/16/python+selenium+chrome实现淘宝购物车秒杀自动结算/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="KevinLyz">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Kevinlyz">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/07/16/python+selenium+chrome实现淘宝购物车秒杀自动结算/" itemprop="url">Untitled</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-16T10:47:14+08:00">
+                2019-07-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>@<a href="python+selenium+chrome实现淘宝购物车秒杀自动结算">TOC</a></p>
+<blockquote>
+<p>之前总是想要买aj，但是淘宝店铺每次发售手动抢的时候一般都会被黄牛抢走。。。最近毕业设计学习了一下python的东西，所以写了这么一个抢购的东西算是解决自己一个小小的愿望，这可是aj啊。<br>我会把内容写的尽量面向初学者，从头至尾的过程都会有所提及。代码也放在了后面</p>
+</blockquote>
+<h2 id="一、所需环境"><a href="#一、所需环境" class="headerlink" title="一、所需环境"></a>一、所需环境</h2><ul>
+<li>Selenium<ul>
+<li>Selenium是一个开源的自动化测试工具。原理是通过模拟浏览器操作，还支持java，python，c#，php等主流的编程语言。</li>
+<li>一般爬虫也支持Selenium，一些经过js渲染的内容和数据和ajax异步请求出来的数据通过Selenium就能很简单直观的爬取下来。但是Selenium的缺点也是显而易见的，相比于正则的匹配Selenium要加载浏览器以及更多的东西，他的执行速度比其他模块慢很多，所以若要保证速度，能不用Selenium就不要用Selenium吧。<blockquote>
+<p>web测试自动化：不同于单元测试和接口测试，web测试的自动化更加贴近于人的行为，通过对用户点击行为和文本输入行为等进行模拟，当web自动化登录成功后，就去获取这个数据进行断言。断言如果相等，测试通过；如果不相等，测试失败。用户可以看到某一项操作是否真的产生了，但是程序只能通过判断某些“证据”去判断之前的行为是否真的生效。</p>
+</blockquote>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="二、安装"><a href="#二、安装" class="headerlink" title="二、安装"></a>二、安装</h2><ul>
+<li>下载<a href="https://www.seleniumhq.org/" target="_blank" rel="noopener">Selenium</a>并安装</li>
+<li>安装对应浏览器的驱动程序 <a href="https://selenium-python.readthedocs.io/installation.html" target="_blank" rel="noopener">WebDriver</a><br>  驱动程序要和自己电脑上的浏览器版本相对应，比如我使用的chrome浏览器是72版本的，就要下载ChromeDriver2.46这个版本。<img src="https://img-blog.csdnimg.cn/20190303141436892.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><img src="https://img-blog.csdnimg.cn/20190303140853858.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>  下载解压之后配置环境变量Path即可。 <a href="https://blog.csdn.net/ywj_486/article/details/80940087" target="_blank" rel="noopener">Mac</a>对应的环境变量配置可以参考这位老哥的文章进行配置<h2 id="三、代码"><a href="#三、代码" class="headerlink" title="三、代码"></a>三、代码</h2><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/usr/bin/env python</span></span><br><span class="line"># -*- coding: utf-8 -*-</span><br><span class="line"></span><br><span class="line"><span class="keyword">from</span> selenium <span class="keyword">import</span> webdriver</span><br><span class="line"><span class="keyword">import</span> datetime</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">def login():</span><br><span class="line">    # 打开淘宝登录页，并进行扫码登录</span><br><span class="line">    browser.get(<span class="string">"https://www.taobao.com"</span>)</span><br><span class="line">    time.sleep(<span class="number">3</span>)</span><br><span class="line">    <span class="keyword">if</span> browser.find_element_by_link_text(<span class="string">"亲，请登录"</span>):</span><br><span class="line">        browser.find_element_by_link_text(<span class="string">"亲，请登录"</span>).click()</span><br><span class="line">        print(<span class="string">"请在15秒内完成扫码"</span>)</span><br><span class="line">        time.sleep(<span class="number">15</span>)</span><br><span class="line">        browser.get(<span class="string">"https://cart.taobao.com/cart.htm"</span>)</span><br><span class="line">    time.sleep(<span class="number">3</span>)</span><br><span class="line"></span><br><span class="line">    now = datetime.datetime.now()</span><br><span class="line">    print(<span class="string">'login success:'</span>, now.strftime(<span class="string">'%Y-%m-%d %H:%M:%S'</span>))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">def buy(times, choose):</span><br><span class="line">    is_buyed = False</span><br><span class="line">    # 点击购物车里全选按钮</span><br><span class="line">    <span class="keyword">if</span> choose == <span class="number">2</span>:</span><br><span class="line">        print(<span class="string">"请手动勾选需要购买的商品"</span>)</span><br><span class="line">    <span class="keyword">while</span> True:</span><br><span class="line">        now = datetime.datetime.now().strftime(<span class="string">'%Y-%m-%d %H:%M:%S.%f'</span>)</span><br><span class="line">        print(<span class="string">'现在时间：'</span>, now)</span><br><span class="line">        # 对比时间，时间到的话就点击结算</span><br><span class="line">        <span class="keyword">if</span> now &gt; times:</span><br><span class="line">            <span class="keyword">if</span> choose == <span class="number">1</span>:</span><br><span class="line">                <span class="keyword">while</span> True:</span><br><span class="line">                    <span class="keyword">try</span>:</span><br><span class="line">                        <span class="keyword">if</span> browser.find_element_by_id(<span class="string">"J_SelectAllcbx1"</span>):</span><br><span class="line">                            browser.find_element_by_id(<span class="string">"J_SelectAllcbx1"</span>).click()</span><br><span class="line">                            print(<span class="string">'尝试全选'</span>)</span><br><span class="line">                            <span class="keyword">break</span></span><br><span class="line">                    except:</span><br><span class="line">                        print(<span class="string">"找不到全选按钮"</span>)</span><br><span class="line">            # 点击结算按钮</span><br><span class="line">            <span class="keyword">try</span>:</span><br><span class="line">                <span class="keyword">if</span> browser.find_element_by_id(<span class="string">"J_Go"</span>):</span><br><span class="line">                    browser.find_element_by_id(<span class="string">"J_Go"</span>).click()</span><br><span class="line">                    print(<span class="string">"结算成功"</span>)</span><br><span class="line">            except:</span><br><span class="line">                pass</span><br><span class="line">            <span class="keyword">while</span> True:</span><br><span class="line">                <span class="keyword">try</span>:</span><br><span class="line">                    <span class="keyword">if</span> browser.find_element_by_link_text(<span class="string">'提交订单'</span>) and is_buyed == False:</span><br><span class="line">                        browser.find_element_by_link_text(<span class="string">'提交订单'</span>).click()</span><br><span class="line">                        now1 = datetime.datetime.now().strftime(<span class="string">'%Y-%m-%d %H:%M:%S.%f'</span>)</span><br><span class="line">                        print(<span class="string">"抢购成功时间：%s"</span> % now1)</span><br><span class="line">                except:</span><br><span class="line">                    print(<span class="string">"再次尝试提交订单"</span>)</span><br><span class="line">            time.sleep(<span class="number">0.005</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span><br><span class="line">    times = input(<span class="string">"请输入抢购时间，格式如(2018-09-06 11:20:00.000000):"</span>)</span><br><span class="line">    # 时间格式："2018-09-06 11:20:00.000000"</span><br><span class="line">    browser = webdriver.Chrome()</span><br><span class="line">    browser.maximize_window()</span><br><span class="line">    login()</span><br><span class="line">    choose = input(<span class="string">"到时间自动勾选购物车请输入“1”，否则输入“2”："</span>)</span><br><span class="line">    buy(times, choose)</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<h2 id="最后run-一把就ok了！！"><a href="#最后run-一把就ok了！！" class="headerlink" title="最后run()一把就ok了！！"></a>最后run()一把就ok了！！</h2>
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/16/String的不可变性及StringBuilder原理/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="KevinLyz">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Kevinlyz">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/07/16/String的不可变性及StringBuilder原理/" itemprop="url">Untitled</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-16T10:44:52+08:00">
+                2019-07-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>@<a href="String的不可变性及StringBuilder原理">TOC</a></p>
+<h2 id="一、String的不可变性"><a href="#一、String的不可变性" class="headerlink" title="一、String的不可变性"></a>一、String的不可变性</h2><blockquote>
+<p>关于String类型的具体分析，可以参考我另一篇博客第三小节的补充内容，有很详细的叙述。<br>   <a href="https://blog.csdn.net/qq_31749835/article/details/88847193#_117" target="_blank" rel="noopener">String 对象的两种创建方式</a></p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"> String str1 = <span class="string">"str"</span>;</span><br><span class="line">String str2 = <span class="string">"ing"</span>;</span><br><span class="line"></span><br><span class="line">String str3 = <span class="string">"str"</span> + <span class="string">"ing"</span>;<span class="comment">//常量池中的对象</span></span><br><span class="line">String str4 = str1 + str2; <span class="comment">//在堆上创建的新的对象	  </span></span><br><span class="line">String str5 = <span class="string">"string"</span>;<span class="comment">//常量池中的对象</span></span><br><span class="line">System.out.println(str3 == str4);    <span class="comment">//false</span></span><br><span class="line">System.out.println(str3 == str5);   <span class="comment">//true</span></span><br><span class="line">System.out.println(str4 == str5);   <span class="comment">//false</span></span><br></pre></td></tr></table></figure>
+
+<p>拿过来其中的例子，可以简单看一下。</p>
+<h3 id="为什么将String设计成不可变类？"><a href="#为什么将String设计成不可变类？" class="headerlink" title="为什么将String设计成不可变类？"></a>为什么将String设计成不可变类？</h3><p>（1）字符串常量池的需要</p>
+<p>字符串常量池(String pool, String intern pool, String保留池) 是Java堆内存中一个特殊的存储区域, 当创建一个String对象时,假如此字符串值已经存在于常量池中,则不会创建一个新的对象,而是引用已经存在的对象。<br>如下面的代码所示,将会在堆内存中只创建一个实际String对象.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">String s1 = <span class="string">"abcd"</span>;  </span><br><span class="line">String s2 = <span class="string">"abcd"</span>;</span><br></pre></td></tr></table></figure>
+
+<p>假若字符串对象允许改变,那么将会导致各种逻辑错误,比如改变一个对象会影响到另一个独立对象. 严格来说，这种常量池的思想,是一种优化手段.</p>
+<p>（2）允许String对象缓存HashCode</p>
+<p>Java中String对象的哈希码被频繁地使用, 比如在hashMap 等容器中。<br>字符串不变性保证了hash码的唯一性,因此可以放心地进行缓存.这也是一种性能优化手段,意味着不必每次都去计算新的哈希码. 在String类的定义中有如下代码:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">int</span> hash;<span class="comment">//用来缓存HashCode</span></span><br></pre></td></tr></table></figure>
+
+<p>（3）安全性</p>
+<p>String被许多的Java类(库)用来当做参数,例如 网络连接地址URL,文件路径path,还有反射机制所需要的String参数等, 假若String不是固定不变的,将会引起各种安全隐患。例如你想加载java.sql.Connection类，而这个值被改成了myhacked.Connection，那么会对你的数据库造成不可知的破坏。</p>
+<h3 id="String类设置为不可变类的好处："><a href="#String类设置为不可变类的好处：" class="headerlink" title="String类设置为不可变类的好处："></a>String类设置为不可变类的好处：</h3><p>（1）提高Java字符串池（String Pool）的效率和安全性。当知道一个对象是不可变的，那么拷贝这个对象的内容时，就不用赋值它的本身而只是复制它的地址，复制地址需要很小的内存，效率也很高。<br>（2）不可变对象对于多线程是安全的，因为多线程的情况下，一个可变对象的值可能被其他进程改变，这样会造成不可预期的结果，而使用不可变对象就可以避免这种情况。</p>
+<h2 id="二、StringBuilder的实现原理"><a href="#二、StringBuilder的实现原理" class="headerlink" title="二、StringBuilder的实现原理"></a>二、StringBuilder的实现原理</h2><h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><p>StringBuilder类也封装了一个字符数组，定义如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">char</span>[] value;</span><br></pre></td></tr></table></figure>
+
+<p>与String不同，它不是final的，可以修改。另外，与String不同，字符数组中不一定所有位置都已经被使用，它有一个实例变量，表示数组中已经使用的字符个数，定义如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> count;</span><br></pre></td></tr></table></figure>
+
+<p>StringBuilder继承自AbstractStringBuilder，它的默认构造方法是：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">StringBuilder</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">super</span>(<span class="number">16</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>调用父类的构造方法，父类对应的构造方法是：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">AbstractStringBuilder(<span class="keyword">int</span> capacity) &#123;</span><br><span class="line">    value = <span class="keyword">new</span> <span class="keyword">char</span>[capacity];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>也就是说，new StringBuilder()这句代码，内部会创建一个长度为16的字符数组，count的默认值为0。</p>
+<h3 id="append的实现"><a href="#append的实现" class="headerlink" title="append的实现"></a>append的实现</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> AbstractStringBuilder <span class="title">append</span><span class="params">(String str)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (str == <span class="keyword">null</span>) str = <span class="string">"null"</span>;</span><br><span class="line">    <span class="keyword">int</span> len = str.length();</span><br><span class="line">    ensureCapacityInternal(count + len);</span><br><span class="line">    str.getChars(<span class="number">0</span>, len, value, count);</span><br><span class="line">    count += len;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>append会直接拷贝字符到内部的字符数组中，如果字符数组长度不够，会进行扩展，实际使用的长度用count体现。具体来说，ensureCapacityInternal(count+len)会确保数组的长度足以容纳新添加的字符，str.getChars会拷贝新添加的字符到字符数组中，count+=len会增加实际使用的长度。</p>
+<p>ensureCapacityInternal的代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">ensureCapacityInternal</span><span class="params">(<span class="keyword">int</span> minimumCapacity)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// overflow-conscious code</span></span><br><span class="line">    <span class="keyword">if</span> (minimumCapacity - value.length &gt; <span class="number">0</span>)</span><br><span class="line">        expandCapacity(minimumCapacity);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果字符数组的长度小于需要的长度，则调用expandCapacity进行扩展，expandCapacity的代码是：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">expandCapacity</span><span class="params">(<span class="keyword">int</span> minimumCapacity)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> newCapacity = value.length * <span class="number">2</span> + <span class="number">2</span>;</span><br><span class="line">    <span class="keyword">if</span> (newCapacity - minimumCapacity &lt; <span class="number">0</span>)</span><br><span class="line">        newCapacity = minimumCapacity;</span><br><span class="line">    <span class="keyword">if</span> (newCapacity &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (minimumCapacity &lt; <span class="number">0</span>) <span class="comment">// overflow</span></span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> OutOfMemoryError();</span><br><span class="line">        newCapacity = Integer.MAX_VALUE;</span><br><span class="line">    &#125;</span><br><span class="line">    value = Arrays.copyOf(value, newCapacity);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>扩展的逻辑是，分配一个足够长度的新数组，然后将原内容拷贝到这个新数组中，最后让内部的字符数组指向这个新数组，这个逻辑主要靠下面这句代码实现：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">value = Arrays.copyOf(value, newCapacity);</span><br></pre></td></tr></table></figure>
+
+<h3 id="toString实现"><a href="#toString实现" class="headerlink" title="toString实现"></a>toString实现</h3><p>字符串构建完后，我们来看toString代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> String <span class="title">toString</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// Create a copy, don't share the array</span></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> String(value, <span class="number">0</span>, count);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>基于内部数组新建了一个String，注意，这个String构造方法不会直接用value数组，而会新建一个，以保证String的不可变性。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/16/Java匿名对象的性能优势分析/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="KevinLyz">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Kevinlyz">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/07/16/Java匿名对象的性能优势分析/" itemprop="url">Untitled</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-16T10:44:47+08:00">
+                2019-07-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>@<a href="Java匿名对象的性能优势分析">TOC</a></p>
+<blockquote>
+<p>今天思考了一下java在使用匿名方式创建对象和普通的句柄方式对java传递对象的性能进行了一点简单的思考，可能不是很全面，在某些方面的理解也能有些偏差，欢迎各位大佬探讨指正！</p>
+</blockquote>
+<p>首先阐明结论：<br>对于能够使用匿名对象进行对象创建和传递的时候，是具有一定性能优势的，尤其是对于大量对象创建的时候，差异更加明显。（抛开数量谈效率都是耍流氓）</p>
+<p>要分析Java使用匿名对象所带来的性能优势，我们首先要对java在内存中创建对象的过程有一定的了解，并对两种创建对象方式见存在的差异进行分析，才能够体会到一些些细小的细节所带来的不同。下面我们逐个分析。</p>
+<blockquote>
+<p><strong>PS.  对于java内存模型不是很了解的朋友可以先读一下我之前的几篇文章，对知识有一个完整的体系，回过头来继续往下看也不迟！</strong><br><a href="https://blog.csdn.net/qq_31749835/article/details/88847193" target="_blank" rel="noopener">从Java的各种基本数据类型看Java内存区域结构划分</a><br><a href="https://blog.csdn.net/qq_31749835/article/details/88662590" target="_blank" rel="noopener">Java包装类及自动装箱、拆箱</a></p>
+</blockquote>
+<h2 id="1-匿名对象"><a href="#1-匿名对象" class="headerlink" title="1.  匿名对象"></a>1.  匿名对象</h2><p>顾名思义，匿名就是没有名字的对象，在创建对象时，只通过new的动作在堆内存开辟空间，却没有把堆内存空间的地址值赋值给栈内存的某个变量用以存储。</p>
+<h2 id="2-Java创建对象的过程"><a href="#2-Java创建对象的过程" class="headerlink" title="2.  Java创建对象的过程"></a>2.  Java创建对象的过程</h2><p>看过引文里的两篇文章之后，相信你已经对Java的内存模型有了一定的了解，让我们继续分析java在创建对象时的过程。</p>
+<ol>
+<li>看下面这条语句：</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Student s = <span class="keyword">new</span> Student();</span><br></pre></td></tr></table></figure>
+
+<p>对应的再看下面这张图：</p>
+<p><img src="https://img-blog.csdnimg.cn/20190602231751811.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
+<p>在执行上面那句代码的时候在栈内存中分配栈帧，并在堆内存中开辟Student对象的空间，并由栈内存指向堆内存中实际的对象地址。</p>
+<ol start="2">
+<li>匿名创建</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">new</span> Student().要执行的方法；</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-blog.csdnimg.cn/20190602232351203.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
+<p>使用匿名的方法创建对象，仅在堆内存中为其分配了内存，并不存在由栈内存到堆内存中的对象引用。</p>
+<h2 id="3-性能差异"><a href="#3-性能差异" class="headerlink" title="3. 性能差异"></a>3. 性能差异</h2><h4 id="存储上的性能差异"><a href="#存储上的性能差异" class="headerlink" title="存储上的性能差异"></a>存储上的性能差异</h4><p>观察上面的两张图我们可以看到，由于使用匿名对象不需要分配栈内存，且无需进行引用指向，在大量创建对象的时候能够节约很多的栈空间，且数量越多越明显。</p>
+<h4 id="垃圾回收上的差异"><a href="#垃圾回收上的差异" class="headerlink" title="垃圾回收上的差异"></a>垃圾回收上的差异</h4><p>Java的GC机制根据对象的引用数量判断该对象是否可达，若对象不可达，则会判定该对象为垃圾，在下一次垃圾回收的时候进行回收。<br>使用匿名对象的好处就是使用完毕就是垃圾，可以在垃圾回收器空闲时回收，节省内存空间。</p>
+<h2 id="4-继续"><a href="#4-继续" class="headerlink" title="4. 继续"></a>4. 继续</h2><p>既然匿名对象使用完了就回收了，为什么要使用呢？<br>我们能够使用匿名对象调用方法。那么为什么说匿名对象调用方法有意义呢？方法存在于栈空间，当在内存中创建的对象调用方法时，JVM开始为局部变量开辟内存空间，方法开始执行，方法强调其功能，对象调用方法可以完成其功能，所以匿名对象调用方法有意义。</p>
+<p>那么为什么不声明为静态呢？<br>静态的内容属于类，并不属于每一个具体的对象，在设计方面存在差异。、</p>
+<h2 id="5-总结"><a href="#5-总结" class="headerlink" title="5. 总结"></a>5. 总结</h2><p>在需要注意系统性能的应用中，使用匿名对象创建的方式能够减少栈帧的分配和指向，且在调用完毕后能够被GC机制快速的回收。但在具体使用的时候需要注意其使用场景，若后续仍需要使用该对象，那么匿名的方式可能就不是个好的选择了。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/16/一文学会Mybatis  Mybatis传入参数及返回类型/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="KevinLyz">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Kevinlyz">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/07/16/一文学会Mybatis  Mybatis传入参数及返回类型/" itemprop="url">Untitled</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-16T10:44:41+08:00">
+                2019-07-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>@<a href="Mybatis传入参数及返回类型详解">TOC</a></p>
+<h2 id="一、Mybatis的三种传入参数的方式"><a href="#一、Mybatis的三种传入参数的方式" class="headerlink" title="一、Mybatis的三种传入参数的方式"></a>一、Mybatis的三种传入参数的方式</h2><h3 id="1-根据下标索引传值"><a href="#1-根据下标索引传值" class="headerlink" title="1. 根据下标索引传值"></a>1. 根据下标索引传值</h3><p>通过传递参数的顺序进行索引，获得参数的值</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Public User <span class="title">selectUser</span><span class="params">(String name,String area)</span></span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&lt;select id=<span class="string">"selectUser"</span> resultMap=<span class="string">"BaseResultMap"</span>&gt;</span><br><span class="line">select * from user_user_t where user_name = #&#123;0&#125; and user_area=#&#123;1&#125;</span><br><span class="line">&lt;/select&gt;</span><br></pre></td></tr></table></figure>
+
+<p>其中#{0} 代表传入的第一个参数，之后依次进行索引。</p>
+<h3 id="2-使用-param注解进行参数传递"><a href="#2-使用-param注解进行参数传递" class="headerlink" title="2. 使用@param注解进行参数传递"></a>2. 使用@param注解进行参数传递</h3><p>先看例子：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Public User <span class="title">selectUser</span><span class="params">(@param(“userName”)</span>Stringname,@<span class="title">param</span><span class="params">(“userArea”)</span>String area)</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&lt;select id=<span class="string">" selectUser"</span> resultMap=<span class="string">"BaseResultMap"</span>&gt;</span><br><span class="line">select * from user_user_t where user_name = #&#123;userName，jdbcType=VARCHAR&#125; and user_area=#&#123;userArea,jdbcType=VARCHAR&#125;</span><br><span class="line">&lt;/select&gt;</span><br></pre></td></tr></table></figure>
+
+<p>这种方法通过定义注解，设定参数的key值，在mapper.xml中通过key值进行获取，这种方法较为直观，但是参数数量较为固定。</p>
+<h3 id="3、通过map传递参数"><a href="#3、通过map传递参数" class="headerlink" title="3、通过map传递参数"></a>3、通过map传递参数</h3><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Public User <span class="title">selectUser</span><span class="params">(Map paramMap)</span></span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&lt;select id=<span class="string">" selectUser"</span> resultMap=<span class="string">"BaseResultMap"</span>&gt;</span><br><span class="line">select * from user_user_t where user_name = #&#123;userName，jdbcType=VARCHAR&#125; and user_area=#&#123;userArea,jdbcType=VARCHAR&#125;</span><br><span class="line">&lt;/select&gt;</span><br></pre></td></tr></table></figure>
+
+<p>通过map的方式进行参数传递不需要固定参数的数量，在mapper中直接通过key值获得参数的值。</p>
+<h3 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h3><p>这几种参数传递的方式每个人有每个人的习惯，可以在具体的项目中根据自己的使用习惯进行选择。</p>
+<h2 id="二、Mybatis的返回类型"><a href="#二、Mybatis的返回类型" class="headerlink" title="二、Mybatis的返回类型"></a>二、Mybatis的返回类型</h2><h3 id="1、返回参数类型"><a href="#1、返回参数类型" class="headerlink" title="1、返回参数类型"></a>1、返回参数类型</h3><p>MyBatis的返回参数类型分两种<br>参数类型|对应的返回值类型<br>——– | —–<br>resultMap|可以返回一个list，也可以返回一个实体<br>resultType|int、string、long、class（实体）</p>
+<h3 id="2、-指定返回resultType"><a href="#2、-指定返回resultType" class="headerlink" title="2、 指定返回resultType"></a>2、 指定返回resultType</h3><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">&lt;select id=<span class="string">"queryCategoryBrandCount"</span> resultType=<span class="string">"java.lang.Integer"</span> parameterType=<span class="string">"java.util.HashMap"</span> &gt;  </span><br><span class="line">        <span class="function">select <span class="title">count</span><span class="params">(<span class="number">1</span>)</span>  </span></span><br><span class="line"><span class="function">        from common_category_brand  </span></span><br><span class="line"><span class="function">        where 1</span>=<span class="number">1</span>  </span><br><span class="line">        &lt;<span class="keyword">if</span> test=<span class="string">"categoryId != null"</span> &gt;  </span><br><span class="line">            and category_id = #&#123;categoryId,jdbcType=BIGINT&#125;  </span><br><span class="line">        &lt;/if&gt;  </span><br><span class="line">        &lt;<span class="keyword">if</span> test=<span class="string">"brandId != null"</span> &gt;  </span><br><span class="line">            and brand_id = #&#123;brandId,jdbcType=BIGINT&#125;  </span><br><span class="line">        &lt;/if&gt;  </span><br><span class="line">    &lt;/select&gt;</span><br></pre></td></tr></table></figure>
+
+<h3 id="3、-指定返回resultMap"><a href="#3、-指定返回resultMap" class="headerlink" title="3、 指定返回resultMap"></a>3、 指定返回resultMap</h3><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&lt;select id=<span class="string">"selectByPrimaryKey"</span> resultMap=<span class="string">"BaseResultMap"</span> parameterType=<span class="string">"java.lang.Long"</span> &gt;  </span><br><span class="line">    select   </span><br><span class="line">    &lt;include refid=<span class="string">"Base_Column_List"</span> /&gt;  </span><br><span class="line">    from common_car_make  </span><br><span class="line">    where id = #&#123;id,jdbcType=BIGINT&#125;  </span><br><span class="line">  &lt;/select&gt;</span><br></pre></td></tr></table></figure>
+
+<p>在返回ResultMap时，需要对之前对BaseResultMap中返回的值的类型进行指定，在执行select语句时返回相应的resultMap</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/16/理解Spring家族生态体系/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="KevinLyz">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Kevinlyz">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/07/16/理解Spring家族生态体系/" itemprop="url">Untitled</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-16T10:44:35+08:00">
+                2019-07-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>@<a href="理解Spring家族生态体系">TOC</a></p>
+<h2 id="第一阶段-spring-core"><a href="#第一阶段-spring-core" class="headerlink" title="第一阶段 spring-core"></a>第一阶段 spring-core</h2><p>开发单体应用，提供便捷的数据库访问功能，还提供mvc功能，通过aop，ioc连接在一起，使得我们的程序能够做到低耦合，可扩展</p>
+<ul>
+<li>spring core；常用的ioc及aop 的内容<br><img src="https://img-blog.csdnimg.cn/20190525115201653.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></li>
+<li>spring security：针对安全方面</li>
+</ul>
+<p><img src="https://img-blog.csdnimg.cn/20190525115336181.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
+<ul>
+<li><p>spring data：作为数据桥梁<br><img src="https://img-blog.csdnimg.cn/2019052511522336.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
+<h2 id="第二阶段-spring-boot"><a href="#第二阶段-spring-boot" class="headerlink" title="第二阶段 spring-boot"></a>第二阶段 spring-boot</h2></li>
+<li><p>spring boot<br>提升程序的开发效率，使得程序从可用变得好用。<br><img src="https://img-blog.csdnimg.cn/20190525115305998.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
+</li>
+</ul>
+<h2 id="第三阶段-spring-cloud微服务"><a href="#第三阶段-spring-cloud微服务" class="headerlink" title="第三阶段 spring-cloud微服务"></a>第三阶段 spring-cloud微服务</h2><ul>
+<li>spring cloud<br>推动微服务架构的落地，让不具备开发微服务的小型互联网公司也能享受到开箱既用的微服务解决方案。<blockquote>
+<p>因为spring cloud相关的内容过于复杂，这里就不进行列举了。</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="第四阶段-spring-cloud-dataflow"><a href="#第四阶段-spring-cloud-dataflow" class="headerlink" title="第四阶段 spring cloud dataflow"></a>第四阶段 spring cloud dataflow</h2><ul>
+<li>spring cloud dataflow<br><img src="https://img-blog.csdnimg.cn/20190525115455846.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></li>
+</ul>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>spring的存在可以说是极大的推动了Java 的发展，为java注入了极大的生命力。从最开始的Spring-core到Spring-Cloud以及正在完善的spring cloud dataflow，理解Spring的生态体系，希望能对理解Spring的架构有所帮助。</p>
+
           
         
       
@@ -338,6 +1969,10 @@
   </section>
 
   
+  <nav class="pagination">
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right"></i></a>
+  </nav>
+
 
 
           </div>
@@ -381,7 +2016,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-count">26</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/head.jpg?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/head.jpg?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/head.jpg?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="@TOC  今天思考了一下java在使用匿名方式创建对象和普通的句柄方式对java传递对象的性能进行了一点简单的思考，可能不是很全面，在某些方面的理解也能有些偏差，欢迎各位大佬探讨指正！  首先阐明结论：对于能够使用匿名对象进行对象创建和传递的时候，是具有一定性能优势的，尤其是对于大量对象创建的时候，差异更加明显。（抛开数量谈效率都是耍流氓） 要分析Java使用匿名对象所带来的性能优势，我们首先要">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kevinlyz">
+<meta property="og:url" content="http://yoursite.com/2019/07/16/Java匿名对象的性能优势分析/index.html">
+<meta property="og:site_name" content="Kevinlyz">
+<meta property="og:description" content="@TOC  今天思考了一下java在使用匿名方式创建对象和普通的句柄方式对java传递对象的性能进行了一点简单的思考，可能不是很全面，在某些方面的理解也能有些偏差，欢迎各位大佬探讨指正！  首先阐明结论：对于能够使用匿名对象进行对象创建和传递的时候，是具有一定性能优势的，尤其是对于大量对象创建的时候，差异更加明显。（抛开数量谈效率都是耍流氓） 要分析Java使用匿名对象所带来的性能优势，我们首先要">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190602231751811.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190602232351203.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70">
+<meta property="og:updated_time" content="2019-07-16T02:44:47.442Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Kevinlyz">
+<meta name="twitter:description" content="@TOC  今天思考了一下java在使用匿名方式创建对象和普通的句柄方式对java传递对象的性能进行了一点简单的思考，可能不是很全面，在某些方面的理解也能有些偏差，欢迎各位大佬探讨指正！  首先阐明结论：对于能够使用匿名对象进行对象创建和传递的时候，是具有一定性能优势的，尤其是对于大量对象创建的时候，差异更加明显。（抛开数量谈效率都是耍流氓） 要分析Java使用匿名对象所带来的性能优势，我们首先要">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/20190602231751811.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/07/16/Java匿名对象的性能优势分析/">
+
+
+
+
+
+  <title> | Kevinlyz</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="default">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Kevinlyz</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">当你的才华还撑不起你的野心时，你就应该静下心来学习。</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/16/Java匿名对象的性能优势分析/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="KevinLyz">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Kevinlyz">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline"></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-16T10:44:47+08:00">
+                2019-07-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>@<a href="Java匿名对象的性能优势分析">TOC</a></p>
+<blockquote>
+<p>今天思考了一下java在使用匿名方式创建对象和普通的句柄方式对java传递对象的性能进行了一点简单的思考，可能不是很全面，在某些方面的理解也能有些偏差，欢迎各位大佬探讨指正！</p>
+</blockquote>
+<p>首先阐明结论：<br>对于能够使用匿名对象进行对象创建和传递的时候，是具有一定性能优势的，尤其是对于大量对象创建的时候，差异更加明显。（抛开数量谈效率都是耍流氓）</p>
+<p>要分析Java使用匿名对象所带来的性能优势，我们首先要对java在内存中创建对象的过程有一定的了解，并对两种创建对象方式见存在的差异进行分析，才能够体会到一些些细小的细节所带来的不同。下面我们逐个分析。</p>
+<blockquote>
+<p><strong>PS.  对于java内存模型不是很了解的朋友可以先读一下我之前的几篇文章，对知识有一个完整的体系，回过头来继续往下看也不迟！</strong><br><a href="https://blog.csdn.net/qq_31749835/article/details/88847193" target="_blank" rel="noopener">从Java的各种基本数据类型看Java内存区域结构划分</a><br><a href="https://blog.csdn.net/qq_31749835/article/details/88662590" target="_blank" rel="noopener">Java包装类及自动装箱、拆箱</a></p>
+</blockquote>
+<h2 id="1-匿名对象"><a href="#1-匿名对象" class="headerlink" title="1.  匿名对象"></a>1.  匿名对象</h2><p>顾名思义，匿名就是没有名字的对象，在创建对象时，只通过new的动作在堆内存开辟空间，却没有把堆内存空间的地址值赋值给栈内存的某个变量用以存储。</p>
+<h2 id="2-Java创建对象的过程"><a href="#2-Java创建对象的过程" class="headerlink" title="2.  Java创建对象的过程"></a>2.  Java创建对象的过程</h2><p>看过引文里的两篇文章之后，相信你已经对Java的内存模型有了一定的了解，让我们继续分析java在创建对象时的过程。</p>
+<ol>
+<li>看下面这条语句：</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Student s = <span class="keyword">new</span> Student();</span><br></pre></td></tr></table></figure>
+
+<p>对应的再看下面这张图：</p>
+<p><img src="https://img-blog.csdnimg.cn/20190602231751811.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
+<p>在执行上面那句代码的时候在栈内存中分配栈帧，并在堆内存中开辟Student对象的空间，并由栈内存指向堆内存中实际的对象地址。</p>
+<ol start="2">
+<li>匿名创建</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">new</span> Student().要执行的方法；</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-blog.csdnimg.cn/20190602232351203.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
+<p>使用匿名的方法创建对象，仅在堆内存中为其分配了内存，并不存在由栈内存到堆内存中的对象引用。</p>
+<h2 id="3-性能差异"><a href="#3-性能差异" class="headerlink" title="3. 性能差异"></a>3. 性能差异</h2><h4 id="存储上的性能差异"><a href="#存储上的性能差异" class="headerlink" title="存储上的性能差异"></a>存储上的性能差异</h4><p>观察上面的两张图我们可以看到，由于使用匿名对象不需要分配栈内存，且无需进行引用指向，在大量创建对象的时候能够节约很多的栈空间，且数量越多越明显。</p>
+<h4 id="垃圾回收上的差异"><a href="#垃圾回收上的差异" class="headerlink" title="垃圾回收上的差异"></a>垃圾回收上的差异</h4><p>Java的GC机制根据对象的引用数量判断该对象是否可达，若对象不可达，则会判定该对象为垃圾，在下一次垃圾回收的时候进行回收。<br>使用匿名对象的好处就是使用完毕就是垃圾，可以在垃圾回收器空闲时回收，节省内存空间。</p>
+<h2 id="4-继续"><a href="#4-继续" class="headerlink" title="4. 继续"></a>4. 继续</h2><p>既然匿名对象使用完了就回收了，为什么要使用呢？<br>我们能够使用匿名对象调用方法。那么为什么说匿名对象调用方法有意义呢？方法存在于栈空间，当在内存中创建的对象调用方法时，JVM开始为局部变量开辟内存空间，方法开始执行，方法强调其功能，对象调用方法可以完成其功能，所以匿名对象调用方法有意义。</p>
+<p>那么为什么不声明为静态呢？<br>静态的内容属于类，并不属于每一个具体的对象，在设计方面存在差异。、</p>
+<h2 id="5-总结"><a href="#5-总结" class="headerlink" title="5. 总结"></a>5. 总结</h2><p>在需要注意系统性能的应用中，使用匿名对象创建的方式能够减少栈帧的分配和指向，且在调用完毕后能够被GC机制快速的回收。但在具体使用的时候需要注意其使用场景，若后续仍需要使用该对象，那么匿名的方式可能就不是个好的选择了。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/07/16/一文学会Mybatis  Mybatis传入参数及返回类型/" rel="next" title>
+                <i class="fa fa-chevron-left"></i> 
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/07/16/String的不可变性及StringBuilder原理/" rel="prev" title>
+                 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">KevinLyz</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">26</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/qq_31749835" target="_blank" title="csdn">
+                      
+                        <i class="fa fa-fw fa-globe"></i>csdn</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-匿名对象"><span class="nav-number">1.</span> <span class="nav-text">1.  匿名对象</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-Java创建对象的过程"><span class="nav-number">2.</span> <span class="nav-text">2.  Java创建对象的过程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-性能差异"><span class="nav-number">3.</span> <span class="nav-text">3. 性能差异</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#存储上的性能差异"><span class="nav-number">3.0.1.</span> <span class="nav-text">存储上的性能差异</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#垃圾回收上的差异"><span class="nav-number">3.0.2.</span> <span class="nav-text">垃圾回收上的差异</span></a></li></ol></li></ol><li class="nav-item nav-level-2"><a class="nav-link" href="#4-继续"><span class="nav-number">4.</span> <span class="nav-text">4. 继续</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-总结"><span class="nav-number">5.</span> <span class="nav-text">5. 总结</span></a></li></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-KevinLyz"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">KevinLyz</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
