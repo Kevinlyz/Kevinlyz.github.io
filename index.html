@@ -229,7 +229,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/02/对Java类初始化顺序的一些理解/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/02/有关Java浮点数的一个有趣的例子以及一个尚未解决的疑惑（java在存储float值时采用的什么策略,是否存在舍入优化？）/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="KevinLyz">
@@ -248,7 +248,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2019/08/02/对Java类初始化顺序的一些理解/" itemprop="url">对Java类初始化顺序的一些理解</a></h1>
+                <a class="post-title-link" href="/2019/08/02/有关Java浮点数的一个有趣的例子以及一个尚未解决的疑惑（java在存储float值时采用的什么策略,是否存在舍入优化？）/" itemprop="url">有关Java浮点数精度丢失的一个有趣的例子以及尚未解决的疑惑</a></h1>
         
 
         <div class="post-meta">
@@ -300,14 +300,12 @@
       
         
           
-          
-静态代码块：用staitc声明，jvm加载类时执行，仅执行一次构造代码块：类中直接用{}定义，每一次创建对象时执行。执行顺序优先级：==(静态块| 静态变量)==  ,  main(),  ==（构造块|成员变量）== , 构造方法。括号内的内容根据声明的先后顺序进行执行。
-
-构造函数12publ
+          本文章重点在于表述最后的例子和尚未解决的疑问，故对于浮点数相关概念只是简单进行叙述
+一、浮点数的存储模式Java 语言支持两种基本的浮点类型： float 和 double 。java 的浮点类型都依据 IEEE 754 标准。IEEE 754 定义了32 位和 64 位双精度两种浮点二进制小数标准
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2019/08/02/对Java类初始化顺序的一些理解/#more" rel="contents">
+            <a class="btn" href="/2019/08/02/有关Java浮点数的一个有趣的例子以及一个尚未解决的疑惑（java在存储float值时采用的什么策略,是否存在舍入优化？）/#more" rel="contents">
               Read more &raquo;
             </a>
           </div>
@@ -1132,135 +1130,6 @@ IOC： 控制反转( Inversion of Control)/依赖注入(Dependency Injection) �
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/02/String的不可变性及StringBuilder原理/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="KevinLyz">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Kevinlyz">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/08/02/String的不可变性及StringBuilder原理/" itemprop="url">String的不可变性及StringBuilder原理</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-08-02T09:43:18+08:00">
-                2019-08-02
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-          一、String的不可变性
-关于String类型的具体分析，可以参考我另一篇博客第三小节的补充内容，有很详细的叙述。   String 对象的两种创建方式
-
-12345678910 String str1 = "str";String str2 = "ing";String str3 = "str"
-          ...
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2019/08/02/String的不可变性及StringBuilder原理/#more" rel="contents">
-              Read more &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/02/final和static关键字辨析/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1391,7 +1260,7 @@ static关键字调用格式：
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/02/IDEA进行SSM框架整合（附源码）/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/02/python+selenium+chrome实现淘宝购物车秒杀自动结算/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="KevinLyz">
@@ -1410,7 +1279,7 @@ static关键字调用格式：
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2019/08/02/IDEA进行SSM框架整合（附源码）/" itemprop="url">IDEA进行SSM框架整合</a></h1>
+                <a class="post-title-link" href="/2019/08/02/python+selenium+chrome实现淘宝购物车秒杀自动结算/" itemprop="url">python+selenium+chrome实现淘宝购物车秒杀自动结算</a></h1>
         
 
         <div class="post-meta">
@@ -1462,13 +1331,145 @@ static关键字调用格式：
       
         
           
-          一、创建Maven项目
-二、配置pom文件其中关于引入的各个jar包的作用，大部分都添加了注释，个别的自己项目用不到的内容，可自行取舍。
-123456789101112131415161718192021222324252627282930313233343536373839404142434445
+          
+之前总是想要买aj，但是淘宝店铺每次发售手动抢的时候一般都会被黄牛抢走。。。最近毕业设计学习了一下python的东西，所以写了这么一个抢购的东西算是解决自己一个小小的愿望，这可是aj啊。我会把内容写的尽量面向初学者，从头至尾的过程都会有所提及。代码也放在了后面
+
+一、所需环境
+Selenium
+S
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2019/08/02/IDEA进行SSM框架整合（附源码）/#more" rel="contents">
+            <a class="btn" href="/2019/08/02/python+selenium+chrome实现淘宝购物车秒杀自动结算/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/02/String的不可变性及StringBuilder原理/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="KevinLyz">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Kevinlyz">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/08/02/String的不可变性及StringBuilder原理/" itemprop="url">String的不可变性及StringBuilder原理</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-08-02T09:43:18+08:00">
+                2019-08-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+          一、String的不可变性
+关于String类型的具体分析，可以参考我另一篇博客第三小节的补充内容，有很详细的叙述。   String 对象的两种创建方式
+
+12345678910 String str1 = "str";String str2 = "ing";String str3 = "str"
+          ...
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2019/08/02/String的不可变性及StringBuilder原理/#more" rel="contents">
               Read more &raquo;
             </a>
           </div>
@@ -1556,7 +1557,7 @@ static关键字调用格式：
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">27</span>
+                  <span class="site-state-item-count">26</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
