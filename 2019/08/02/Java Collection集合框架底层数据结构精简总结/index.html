@@ -79,16 +79,19 @@
 
 
 
+<meta name="description" content="Collection集合List ArrayList：object数组 LinkedList：双向链表 线程安全？ 否 异同？    ArrayList适合随机存取 LinkedList适合插入删除操作，不适合搜索Map HashMap：数组加链表，拉链法解决冲突  1.8之后超过阈值转为红黑树以减少搜索时间  非线程安全  初始大小为16，每次扩容为原来的二倍 HashTable：数组+链表组成">
 <meta property="og:type" content="article">
-<meta property="og:title" content="理解BIO、NIO、AIO">
-<meta property="og:url" content="http://yoursite.com/2019/08/02/理解BIO、NIO、AIO/index.html">
+<meta property="og:title" content="Java Collection集合框架底层数据结构精简总结">
+<meta property="og:url" content="http://yoursite.com/2019/08/02/Java Collection集合框架底层数据结构精简总结/index.html">
 <meta property="og:site_name" content="Kevinlyz">
+<meta property="og:description" content="Collection集合List ArrayList：object数组 LinkedList：双向链表 线程安全？ 否 异同？    ArrayList适合随机存取 LinkedList适合插入删除操作，不适合搜索Map HashMap：数组加链表，拉链法解决冲突  1.8之后超过阈值转为红黑树以减少搜索时间  非线程安全  初始大小为16，每次扩容为原来的二倍 HashTable：数组+链表组成">
 <meta property="og:locale" content="default">
-<meta property="og:image" content="https://raw.githubusercontent.com/Kevinlyz/yosoro/master/20190802093055-image.png?token=AGAN3FRQIP2TIZ5ZHOO6ARK5IOLEE">
-<meta property="og:updated_time" content="2019-08-02T01:47:09.383Z">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190419170241875.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70">
+<meta property="og:updated_time" content="2019-09-23T02:54:55.776Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="理解BIO、NIO、AIO">
-<meta name="twitter:image" content="https://raw.githubusercontent.com/Kevinlyz/yosoro/master/20190802093055-image.png?token=AGAN3FRQIP2TIZ5ZHOO6ARK5IOLEE">
+<meta name="twitter:title" content="Java Collection集合框架底层数据结构精简总结">
+<meta name="twitter:description" content="Collection集合List ArrayList：object数组 LinkedList：双向链表 线程安全？ 否 异同？    ArrayList适合随机存取 LinkedList适合插入删除操作，不适合搜索Map HashMap：数组加链表，拉链法解决冲突  1.8之后超过阈值转为红黑树以减少搜索时间  非线程安全  初始大小为16，每次扩容为原来的二倍 HashTable：数组+链表组成">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/20190419170241875.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70">
 
 
 
@@ -118,13 +121,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2019/08/02/理解BIO、NIO、AIO/">
+  <link rel="canonical" href="http://yoursite.com/2019/08/02/Java Collection集合框架底层数据结构精简总结/">
 
 
 
 
 
-  <title>理解BIO、NIO、AIO | Kevinlyz</title>
+  <title>Java Collection集合框架底层数据结构精简总结 | Kevinlyz</title>
   
 
 
@@ -231,7 +234,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/02/理解BIO、NIO、AIO/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/02/Java Collection集合框架底层数据结构精简总结/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="KevinLyz">
@@ -248,7 +251,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">理解BIO、NIO、AIO</h1>
+          <h1 class="post-title" itemprop="name headline">Java Collection集合框架底层数据结构精简总结</h1>
         
 
         <div class="post-meta">
@@ -298,7 +301,26 @@
       
 
       
-        <p><img src="https://raw.githubusercontent.com/Kevinlyz/yosoro/master/20190802093055-image.png?token=AGAN3FRQIP2TIZ5ZHOO6ARK5IOLEE" alt="123.png"></p>
+        <h1 id="Collection集合"><a href="#Collection集合" class="headerlink" title="Collection集合"></a>Collection集合</h1><h2 id="List"><a href="#List" class="headerlink" title="List"></a>List</h2><ul>
+<li>ArrayList：object数组</li>
+<li>LinkedList：双向链表</li>
+<li>线程安全？ 否</li>
+<li>异同？    ArrayList适合随机存取</li>
+<li>LinkedList适合插入删除操作，不适合搜索<h2 id="Map"><a href="#Map" class="headerlink" title="Map"></a>Map</h2></li>
+<li>HashMap：数组加链表，拉链法解决冲突  1.8之后超过阈值转为红黑树以减少搜索时间  非线程安全  初始大小为16，每次扩容为原来的二倍</li>
+<li>HashTable：数组+链表组成；   安全；   全表锁，效率低，避免使用</li>
+<li>ConcurrentHashMap：1.7采用分段数组（Segment）+链表进行实现   1.8采用与hashmap1.8中相同的数据结构：数组+链表/红黑树</li>
+<li>TreeMap:红黑树  （自平衡的排序二叉树）</li>
+<li>LinkedHashMap：  LinkedHashMap继承自HashMap，所以它的底层仍然是基于拉链式散列结构即由数组和链表或红黑树组成。另外，LinkedHashMap 在上面结构的基础上，增加了一条双向链表，使得上面的结构可以保持键值对的插入顺序。同时通过对链表进行相应的操作，实现了访问顺序相关逻辑。</li>
+</ul>
+<h2 id="Set"><a href="#Set" class="headerlink" title="Set"></a>Set</h2><ul>
+<li>HashSet： 无序 唯一</li>
+<li>LinkedHashSet:     LinkedHashSet 继承于HashSet，并且其内部是通过 LinkedHashMap 来实现的。</li>
+<li>TreeSet：有序 唯一<br><img src="https://img-blog.csdnimg.cn/20190419170241875.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></li>
+</ul>
+<blockquote>
+<p>引用：<a href="https://github.com/Snailclimb/JavaGuide/blob/master/docs/java/%E8%BF%99%E5%87%A0%E9%81%93Java%E9%9B%86%E5%90%88%E6%A1%86%E6%9E%B6%E9%9D%A2%E8%AF%95%E9%A2%98%E5%87%A0%E4%B9%8E%E5%BF%85%E9%97%AE.md#hashmap%E7%9A%84%E5%BA%95%E5%B1%82%E5%AE%9E%E7%8E%B0" target="_blank" rel="noopener">这几道Java集合框架面试题几乎必问</a></p>
+</blockquote>
 
       
     </div>
@@ -323,8 +345,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2019/08/02/理解JavaScript函数，类继承/" rel="next" title="理解JavaScript函数，类继承">
-                <i class="fa fa-chevron-left"></i> 理解JavaScript函数，类继承
+              <a href="/2019/08/02/有关Java浮点数的一个有趣的例子以及一个尚未解决的疑惑（java在存储float值时采用的什么策略,是否存在舍入优化？）/" rel="next" title="有关Java浮点数精度丢失的一个有趣的例子以及尚未解决的疑惑">
+                <i class="fa fa-chevron-left"></i> 有关Java浮点数精度丢失的一个有趣的例子以及尚未解决的疑惑
               </a>
             
           </div>
@@ -333,8 +355,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2019/08/02/有关Java浮点数的一个有趣的例子以及一个尚未解决的疑惑（java在存储float值时采用的什么策略,是否存在舍入优化？）/" rel="prev" title="有关Java浮点数精度丢失的一个有趣的例子以及尚未解决的疑惑">
-                有关Java浮点数精度丢失的一个有趣的例子以及尚未解决的疑惑 <i class="fa fa-chevron-right"></i>
+              <a href="/2019/08/02/对Git工作原理的一些理解/" rel="prev" title="Git 原理及工作流程">
+                Git 原理及工作流程 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -387,8 +409,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -440,6 +471,22 @@
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Collection集合"><span class="nav-number">1.</span> <span class="nav-text">Collection集合</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#List"><span class="nav-number">1.1.</span> <span class="nav-text">List</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Map"><span class="nav-number">1.2.</span> <span class="nav-text">Map</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Set"><span class="nav-number">1.3.</span> <span class="nav-text">Set</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       

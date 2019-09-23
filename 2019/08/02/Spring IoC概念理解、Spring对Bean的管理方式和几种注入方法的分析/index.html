@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/head.jpg?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/head.jpg?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/head.jpg?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="一、核心概念 IOC： 控制反转( Inversion of Control)/依赖注入(Dependency Injection) ：由Spring容器负责对象的生命周期和对象之间的依赖关系如何理解控制反转？  谁控制谁？ IOC容器控制对象。传统的开发模式，我们都是采用直接new对象的方式来创建对象，每个依赖的对象都由自己进行控制。但是有了IOC容器后，则直接由IOC容器来进行控制。IOC容器">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring IoC概念理解、Spring对Bean的管理方式和几种注入方法的分析">
+<meta property="og:url" content="http://yoursite.com/2019/08/02/Spring IoC概念理解、Spring对Bean的管理方式和几种注入方法的分析/index.html">
+<meta property="og:site_name" content="Kevinlyz">
+<meta property="og:description" content="一、核心概念 IOC： 控制反转( Inversion of Control)/依赖注入(Dependency Injection) ：由Spring容器负责对象的生命周期和对象之间的依赖关系如何理解控制反转？  谁控制谁？ IOC容器控制对象。传统的开发模式，我们都是采用直接new对象的方式来创建对象，每个依赖的对象都由自己进行控制。但是有了IOC容器后，则直接由IOC容器来进行控制。IOC容器">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2019-09-23T02:50:15.778Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Spring IoC概念理解、Spring对Bean的管理方式和几种注入方法的分析">
+<meta name="twitter:description" content="一、核心概念 IOC： 控制反转( Inversion of Control)/依赖注入(Dependency Injection) ：由Spring容器负责对象的生命周期和对象之间的依赖关系如何理解控制反转？  谁控制谁？ IOC容器控制对象。传统的开发模式，我们都是采用直接new对象的方式来创建对象，每个依赖的对象都由自己进行控制。但是有了IOC容器后，则直接由IOC容器来进行控制。IOC容器">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/08/02/Spring IoC概念理解、Spring对Bean的管理方式和几种注入方法的分析/">
+
+
+
+
+
+  <title>Spring IoC概念理解、Spring对Bean的管理方式和几种注入方法的分析 | Kevinlyz</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="default">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Kevinlyz</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">当你的才华还撑不起你的野心时，你就应该静下心来学习。</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/02/Spring IoC概念理解、Spring对Bean的管理方式和几种注入方法的分析/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="KevinLyz">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Kevinlyz">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Spring IoC概念理解、Spring对Bean的管理方式和几种注入方法的分析</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-08-02T09:43:18+08:00">
+                2019-08-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="一、核心概念"><a href="#一、核心概念" class="headerlink" title="一、核心概念"></a>一、核心概念</h2><ul>
+<li><p>IOC： 控制反转( Inversion of Control)/依赖注入(Dependency Injection) ：<br>由Spring容器负责对象的生命周期和对象之间的依赖关系<br>如何理解控制反转？</p>
+</li>
+<li><p>谁控制谁？ IOC容器控制对象。<br>传统的开发模式，我们都是采用直接new对象的方式来创建对象，每个依赖的对象都由自己进行控制。但是有了IOC容器后，则直接由IOC容器来进行控制。IOC容器可以类似的理解为房产的中介，管理着许多房产的资料，如果想要租房或者买房，直接从中介那里获取信息，将原来的主动寻找信息转变为了从指定的地方获取。原来是需要什么东西自己去拿，现在是需要什么东西让别人（IOC Service Provider）送过来</p>
+</li>
+<li><p>谁被控制？<br>对象被控制。被IOC容器控制</p>
+</li>
+<li><p>为什么叫反转？<br>正： 自己创建对象，自己进行对象管理<br>反转： 所依赖的对象直接由IoC容器创建后注入到被注入的对象中，所依赖的对象的获取方式发生了反转</p>
+</li>
+<li><p>什么被反转了？<br>所依赖的对象的获取方式被反转了</p>
+<h2 id="二、Spring加载Bean的过程"><a href="#二、Spring加载Bean的过程" class="headerlink" title="二、Spring加载Bean的过程"></a>二、Spring加载Bean的过程</h2><p>Spring 容器直接管理的对象称之为 bean，其加载过程分为读取定义、根据定义加载两部分:</p>
+</li>
+<li><p>获得 bean 的定义: BeanFactory 使用 BeanDefinitionReader 加载 BeanDefinition 到 BeanDefinitionRegistry 进行注册。</p>
+</li>
+<li><p>加载 bean: 调用 BeanFacotry 的 getBean 方法时，根据 BeanDefinition 来加载对应的 Bean。<br>在加载 bean 的过程中，AbastractBeanFactory 作为 BeanFactory 接口的抽象实现，将 BeanFactory 的 getBean 操作委托到了内部的 doGetBean 方法。doGetBean 内部进行各种逻辑判断（是否注册过、是否已经初始化过、依赖的 bean 是否已经加载等）后，调用 creatBean 进行 bean 的创建。creatBean 是一个抽象方法，这里来看一下 AbstractAutowireCapableBeanFactory 中的具体实现。 AbstractAutowireCapableBeanFactory 的 createBean 方法在真正创建前，会先调用 resolveBeforeInstantiation 来处理需要 AOP 增强的 bean，如果该方法返回了代理后的 bean，则直接返回该 bean。</p>
+<h2 id="三、注入方式"><a href="#三、注入方式" class="headerlink" title="三、注入方式"></a>三、注入方式</h2><p>IoC的注入方式总共有如下几种：</p>
+</li>
+</ul>
+<ol>
+<li><strong>构造器注入</strong></li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Controller</span></span><br><span class="line">pulic <span class="class"><span class="keyword">class</span> <span class="title">YoungMan</span></span>&#123;</span><br><span class="line">	<span class="meta">@Autowired</span></span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> BeautifulGirl beautifulGril;</span><br><span class="line"></span><br><span class="line">	YoungMan(BeautifulGirl beautifulGirl)&#123;</span><br><span class="line">    	    <span class="keyword">this</span>.beautifulGirl = beautifulGirl;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li><strong>setter方式注入</strong></li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Controller</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">YoungMan</span></span>&#123;</span><br><span class="line">	<span class="meta">@Autowired</span></span><br><span class="line">	<span class="keyword">private</span> BeautifulDirl beautiofulGirl;</span><br><span class="line">	</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setBeautifulGirl</span><span class="params">(BeautifulGirl beautifulGirl)</span></span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.beautifulGirl = beautifulGirl;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li><strong>field注入</strong></li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Controller</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">YoungMan</span> </span>&#123;</span><br><span class="line">  <span class="meta">@Autowired</span></span><br><span class="line">  <span class="keyword">private</span> BeautifulGirl beautifGirl;</span><br><span class="line">  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>那么为什么会有三种注入方式呢？</p>
+<ul>
+<li><p>其中field注入的方式是最简介的一种注入方式，也非常符合人的第一逻辑，只要加上@Autowired注解放在实例域上依赖注入就完成了，也不需要去写setter和Constructor。但是使用filed注入的方式存在着几个问题：</p>
+<ul>
+<li><p>一是无法复用该实现类。<br>没有Setter 或有参构造器意味着通过 Field Injection 注入的实例域无法通过常规的手段进行初始化，必须要依赖DI容器。这就意味着这不是一个纯粹的 POJO 了，这个类彻底放弃了对自身依赖的管理。使用者也往往无法清晰的知道正确使用这个类所需要的依赖，而 Setter 或 Construtor 可清晰的告知使用者这个类的依赖。<br>Field Injection 也让我们感觉到注入依赖实在是太容易了，声明下变量，一个注解就搞定了，于是经常导致注入过多的依赖。当一个类依赖了过多其他的类，往往意味着违反了单一职责原则 (Single Responsibility Principle, SRP)。这个类的很多责任应该划分到其他类中，而不是在 DI 的便利下增加其责任。</p>
+</li>
+<li><p>二是会存在循环注入的情况，A-&gt;B，B-&gt;A。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">A</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> B b;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">B</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> A a;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+</li>
+</ul>
+<p>setter注入是在spring3.0刚推出的时候官方推荐的注入方式，当时的原话是：</p>
+<blockquote>
+<p>The Spring team generally advocates setter injection, because large numbers of constructor arguments can get unwieldy, especially when properties are optional. Setter methods also make objects of that class amenable to reconfiguration or re-injection later. Management through JMX MBeans is a compelling use case.<br>Some purists favor constructor-based injection. Supplying all object dependencies means that the object is always returned to client (calling) code in a totally initialized state. The disadvantage is that the object becomes less amenable to reconfiguration and re-injection.</p>
+</blockquote>
+<blockquote>
+<p>翻译过来就是：Spring团队提倡使用setter注入的方式，因为大量的构造器声明会显得臃肿，特别是当属性是可选的时候。setter方法该类的对象在以后能够重新配置或者重新注入。<br>一些人追求构造器注入，他们认为所有的对象依赖意味着这个对象始终以完全初始化的状态返回到调用他的代码。这种方式的缺点是对象不适合重新配置和注入。</p>
+</blockquote>
+<p>其存在的原因不外乎认为setter比较灵活</p>
+<p>但是在Spring4.x之后，官方又开始推荐构造器注入的方式。官方是这么说的：</p>
+<blockquote>
+<p>The Spring team generally advocates constructor injection as it enables one to implement application components as immutable objects and to ensure that required dependencies are not null. Furthermore constructor-injected components are always returned to client (calling) code in a fully initialized state.<br>Spring团队大力提倡（花式秀，之前还提倡setter方式呢）构造器注入的方式，因为啊，这个构造器注入的方式<strong>能够确保注入的组件不可变，并确保所需的依赖不是null</strong>。而且啊，构造器注入的依赖总是能够在返回客户端（组件）代码的时候<strong>保证完全初始化</strong>的状态</p>
+</blockquote>
+<p>构造器注入的方式保证了两点：</p>
+<ul>
+<li>依赖不可变：上例中的final关键字</li>
+<li>依赖不为空：当要初始化实例化YoungMan的时候，由于YoungMan实现了有参数的构造函数，故不会调用默认的无参构造器，此时需要由Spring容器传入所需要的BeautifulGirl，保证所需要依赖的对象不为空。也保证了<strong>完全初始化</strong>。</li>
+</ul>
+<h2 id="四、总结"><a href="#四、总结" class="headerlink" title="四、总结"></a>四、总结</h2><p>我们在使用IOC的时候，首先考虑使用构造器的方式进行注入，但当一个依赖有多个其他的类，使用field注入或者setter注入方式来指定注入的类型或许会方便些。（但是，有多个依赖不一定是好事，此时要注意SRP原则Single Responsibility Principle，过多的职责需要划分到其他的类当中去，而不是在DI的便利下增加其责任。）<br>Spring 官方目前推荐尽量使用构造器注入。</p>
+<ol>
+<li>依赖不可变：因为构造注入可以注入 final域，让依赖更加的不可变。</li>
+<li>依赖不为空：能避免依赖为null的情况。而且如果注入了过多的依赖，构造器也会显得臃肿不堪，会提示开发者注意 SRP 原则。另外，Spring 4.3 版本之后，构造器注入的情况下可以省去 @Autowired 注解，代码可以变得更加纯粹，与框架依赖更少。</li>
+<li>所需依赖被完全初始化</li>
+<li>不存在拟循环依赖<br>当然，Setter 注入方式也有它的优点，在许多情况下还是需要通过 setter 来进行注入的。比如注入一些可选的依赖，或者需要在运行时动态改变的依赖。</li>
+</ol>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/08/02/String的不可变性及StringBuilder原理/" rel="next" title="String的不可变性及StringBuilder原理">
+                <i class="fa fa-chevron-left"></i> String的不可变性及StringBuilder原理
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/08/02/Java注解学习，反射机制获取由注解标记的信息并构建sql查询语句/" rel="prev" title="java注解学习笔记">
+                java注解学习笔记 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">KevinLyz</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">27</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/qq_31749835" target="_blank" title="csdn">
+                      
+                        <i class="fa fa-fw fa-globe"></i>csdn</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#一、核心概念"><span class="nav-number">1.</span> <span class="nav-text">一、核心概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二、Spring加载Bean的过程"><span class="nav-number">2.</span> <span class="nav-text">二、Spring加载Bean的过程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三、注入方式"><span class="nav-number">3.</span> <span class="nav-text">三、注入方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#四、总结"><span class="nav-number">4.</span> <span class="nav-text">四、总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-KevinLyz"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">KevinLyz</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

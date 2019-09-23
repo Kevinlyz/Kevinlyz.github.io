@@ -79,16 +79,20 @@
 
 
 
+<meta name="description" content="昨天朋友问了我一个问题，JVM client模式和Server模式之间的区别，对于这个问题之前并不知道，后来经过了一番查阅大致了解了一下，在这里简单做一下记录。 一、如何查看JVM当前的模式想要查看JVM当前所处的模式很简单，只需要我们安装jdk时候的java -version命令就可以看到当然我们说的是==Hot Spot虚拟机==。 二、启动上的差别 Server模式启动时，速度较慢，但是一旦">
 <meta property="og:type" content="article">
-<meta property="og:title" content="理解BIO、NIO、AIO">
-<meta property="og:url" content="http://yoursite.com/2019/08/02/理解BIO、NIO、AIO/index.html">
+<meta property="og:title" content="JVM的client模式和Server模式（不要随便搞）">
+<meta property="og:url" content="http://yoursite.com/2019/08/02/JVM的client模式和Server模式（不要随便搞）/index.html">
 <meta property="og:site_name" content="Kevinlyz">
+<meta property="og:description" content="昨天朋友问了我一个问题，JVM client模式和Server模式之间的区别，对于这个问题之前并不知道，后来经过了一番查阅大致了解了一下，在这里简单做一下记录。 一、如何查看JVM当前的模式想要查看JVM当前所处的模式很简单，只需要我们安装jdk时候的java -version命令就可以看到当然我们说的是==Hot Spot虚拟机==。 二、启动上的差别 Server模式启动时，速度较慢，但是一旦">
 <meta property="og:locale" content="default">
-<meta property="og:image" content="https://raw.githubusercontent.com/Kevinlyz/yosoro/master/20190802093055-image.png?token=AGAN3FRQIP2TIZ5ZHOO6ARK5IOLEE">
-<meta property="og:updated_time" content="2019-08-02T01:47:09.383Z">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190627173458258.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190627180511765.png">
+<meta property="og:updated_time" content="2019-09-23T02:55:35.769Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="理解BIO、NIO、AIO">
-<meta name="twitter:image" content="https://raw.githubusercontent.com/Kevinlyz/yosoro/master/20190802093055-image.png?token=AGAN3FRQIP2TIZ5ZHOO6ARK5IOLEE">
+<meta name="twitter:title" content="JVM的client模式和Server模式（不要随便搞）">
+<meta name="twitter:description" content="昨天朋友问了我一个问题，JVM client模式和Server模式之间的区别，对于这个问题之前并不知道，后来经过了一番查阅大致了解了一下，在这里简单做一下记录。 一、如何查看JVM当前的模式想要查看JVM当前所处的模式很简单，只需要我们安装jdk时候的java -version命令就可以看到当然我们说的是==Hot Spot虚拟机==。 二、启动上的差别 Server模式启动时，速度较慢，但是一旦">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/20190627173458258.png">
 
 
 
@@ -118,13 +122,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2019/08/02/理解BIO、NIO、AIO/">
+  <link rel="canonical" href="http://yoursite.com/2019/08/02/JVM的client模式和Server模式（不要随便搞）/">
 
 
 
 
 
-  <title>理解BIO、NIO、AIO | Kevinlyz</title>
+  <title>JVM的client模式和Server模式（不要随便搞） | Kevinlyz</title>
   
 
 
@@ -231,7 +235,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/02/理解BIO、NIO、AIO/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/02/JVM的client模式和Server模式（不要随便搞）/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="KevinLyz">
@@ -248,7 +252,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">理解BIO、NIO、AIO</h1>
+          <h1 class="post-title" itemprop="name headline">JVM的client模式和Server模式（不要随便搞）</h1>
         
 
         <div class="post-meta">
@@ -298,7 +302,24 @@
       
 
       
-        <p><img src="https://raw.githubusercontent.com/Kevinlyz/yosoro/master/20190802093055-image.png?token=AGAN3FRQIP2TIZ5ZHOO6ARK5IOLEE" alt="123.png"></p>
+        <p>昨天朋友问了我一个问题，JVM client模式和Server模式之间的区别，对于这个问题之前并不知道，后来经过了一番查阅大致了解了一下，在这里简单做一下记录。</p>
+<h2 id="一、如何查看JVM当前的模式"><a href="#一、如何查看JVM当前的模式" class="headerlink" title="一、如何查看JVM当前的模式"></a>一、如何查看JVM当前的模式</h2><p>想要查看JVM当前所处的模式很简单，只需要我们安装jdk时候的java -version命令就可以看到<br><img src="https://img-blog.csdnimg.cn/20190627173458258.png" alt="在这里插入图片描述"><br>当然我们说的是==Hot Spot虚拟机==。</p>
+<h2 id="二、启动上的差别"><a href="#二、启动上的差别" class="headerlink" title="二、启动上的差别"></a>二、启动上的差别</h2><ul>
+<li>Server模式启动时，速度较慢，但是一旦运行起来后，性能将会有很大的提升</li>
+<li>Client模式启动时，启动较快，占用内存少，针对客户端进行优化</li>
+</ul>
+<h2 id="二、修改启动的方式"><a href="#二、修改启动的方式" class="headerlink" title="二、修改启动的方式"></a>二、修改启动的方式</h2><p>在路径JAVA_HOME/jre/lib/amd64/jvm.cfg    修改-server和-client的配置即可完成更改。</p>
+<p><img src="https://img-blog.csdnimg.cn/20190627180511765.png" alt="在这里插入图片描述"></p>
+<blockquote>
+<p><strong>PS.   64位的虚拟机只支持server模式，不存在client目录。32位的才存在client目录</strong>，笔者做测试使用的是64位的jdk，在修改为cliet之后提示了如下错误，再次修改回初始状态仍然提示错误，故如果==没有硬性需求不建议盲目修改（好像client都要被摒弃了，本身java就不适合用来写客户端）==！！！！有经验的大佬麻烦一起探讨产生这种问题的原因~</p>
+</blockquote>
+<h2 id="三、空间大小的差异"><a href="#三、空间大小的差异" class="headerlink" title="三、空间大小的差异"></a>三、空间大小的差异</h2><p><strong>JVM在client模式默认-Xms是1M，-Xmx是64M<br>JVM在Server模式默认-Xms是128M，-Xmx是1024M；</strong></p>
+<h2 id="四、本质"><a href="#四、本质" class="headerlink" title="四、本质"></a>四、本质</h2><p>其实说Server和Client是JVM的两种工作模式是不准确的，因为它们就是不同的虚拟机，因此应该说<strong>有两种类型的JVM</strong>，在配置之后进行切换。</p>
+<p>当虚拟机运行在-client模式的时候,使用的是一个代号为C1的轻量级编译器, 而-server模式启动的虚拟机采用相对重量级,代号为C2的编译器. C2比C1编译器编译的相对彻底,服务起来之后,性能更高。</p>
+<ul>
+<li>Server启动慢，编译更完全，编译器是自适应编译器，效率高，针对服务端应用优化，在服务器环境中最大化程序执行速度而设计</li>
+<li>Client启动快速，内存占用少，编译快，针对桌面应用程序优化，为在客户端环境中减少启动时间而优化</li>
+</ul>
 
       
     </div>
@@ -323,8 +344,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2019/08/02/理解JavaScript函数，类继承/" rel="next" title="理解JavaScript函数，类继承">
-                <i class="fa fa-chevron-left"></i> 理解JavaScript函数，类继承
+              <a href="/2019/08/02/Java位运算不一定比乘法快 (关于java数据运算的一些思考)/" rel="next" title="Java位运算不一定比乘法快 (关于java数据运算的一些思考)">
+                <i class="fa fa-chevron-left"></i> Java位运算不一定比乘法快 (关于java数据运算的一些思考)
               </a>
             
           </div>
@@ -333,8 +354,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2019/08/02/有关Java浮点数的一个有趣的例子以及一个尚未解决的疑惑（java在存储float值时采用的什么策略,是否存在舍入优化？）/" rel="prev" title="有关Java浮点数精度丢失的一个有趣的例子以及尚未解决的疑惑">
-                有关Java浮点数精度丢失的一个有趣的例子以及尚未解决的疑惑 <i class="fa fa-chevron-right"></i>
+              <a href="/2019/08/02/对Java类初始化顺序的一些理解/" rel="prev" title="对Java类初始化顺序的一些理解">
+                对Java类初始化顺序的一些理解 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -387,8 +408,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -440,6 +470,22 @@
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#一、如何查看JVM当前的模式"><span class="nav-number">1.</span> <span class="nav-text">一、如何查看JVM当前的模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二、启动上的差别"><span class="nav-number">2.</span> <span class="nav-text">二、启动上的差别</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二、修改启动的方式"><span class="nav-number">3.</span> <span class="nav-text">二、修改启动的方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三、空间大小的差异"><span class="nav-number">4.</span> <span class="nav-text">三、空间大小的差异</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#四、本质"><span class="nav-number">5.</span> <span class="nav-text">四、本质</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       

@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/head.jpg?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/head.jpg?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/head.jpg?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="之前总是想要买aj，但是淘宝店铺每次发售手动抢的时候一般都会被黄牛抢走。。。最近毕业设计学习了一下python的东西，所以写了这么一个抢购的东西算是解决自己一个小小的愿望，这可是aj啊。我会把内容写的尽量面向初学者，从头至尾的过程都会有所提及。代码也放在了后面  一、所需环境 Selenium Selenium是一个开源的自动化测试工具。原理是通过模拟浏览器操作，还支持java，python，c">
+<meta property="og:type" content="article">
+<meta property="og:title" content="python+selenium+chrome实现淘宝购物车秒杀自动结算">
+<meta property="og:url" content="http://yoursite.com/2019/08/02/python+selenium+chrome实现淘宝购物车秒杀自动结算/index.html">
+<meta property="og:site_name" content="Kevinlyz">
+<meta property="og:description" content="之前总是想要买aj，但是淘宝店铺每次发售手动抢的时候一般都会被黄牛抢走。。。最近毕业设计学习了一下python的东西，所以写了这么一个抢购的东西算是解决自己一个小小的愿望，这可是aj啊。我会把内容写的尽量面向初学者，从头至尾的过程都会有所提及。代码也放在了后面  一、所需环境 Selenium Selenium是一个开源的自动化测试工具。原理是通过模拟浏览器操作，还支持java，python，c">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190303141436892.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190303140853858.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70">
+<meta property="og:updated_time" content="2019-09-23T02:51:32.861Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="python+selenium+chrome实现淘宝购物车秒杀自动结算">
+<meta name="twitter:description" content="之前总是想要买aj，但是淘宝店铺每次发售手动抢的时候一般都会被黄牛抢走。。。最近毕业设计学习了一下python的东西，所以写了这么一个抢购的东西算是解决自己一个小小的愿望，这可是aj啊。我会把内容写的尽量面向初学者，从头至尾的过程都会有所提及。代码也放在了后面  一、所需环境 Selenium Selenium是一个开源的自动化测试工具。原理是通过模拟浏览器操作，还支持java，python，c">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/20190303141436892.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/08/02/python+selenium+chrome实现淘宝购物车秒杀自动结算/">
+
+
+
+
+
+  <title>python+selenium+chrome实现淘宝购物车秒杀自动结算 | Kevinlyz</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="default">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Kevinlyz</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">当你的才华还撑不起你的野心时，你就应该静下心来学习。</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/02/python+selenium+chrome实现淘宝购物车秒杀自动结算/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="KevinLyz">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Kevinlyz">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">python+selenium+chrome实现淘宝购物车秒杀自动结算</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-08-02T09:43:18+08:00">
+                2019-08-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <blockquote>
+<p>之前总是想要买aj，但是淘宝店铺每次发售手动抢的时候一般都会被黄牛抢走。。。最近毕业设计学习了一下python的东西，所以写了这么一个抢购的东西算是解决自己一个小小的愿望，这可是aj啊。<br>我会把内容写的尽量面向初学者，从头至尾的过程都会有所提及。代码也放在了后面</p>
+</blockquote>
+<h2 id="一、所需环境"><a href="#一、所需环境" class="headerlink" title="一、所需环境"></a>一、所需环境</h2><ul>
+<li>Selenium<ul>
+<li>Selenium是一个开源的自动化测试工具。原理是通过模拟浏览器操作，还支持java，python，c#，php等主流的编程语言。</li>
+<li>一般爬虫也支持Selenium，一些经过js渲染的内容和数据和ajax异步请求出来的数据通过Selenium就能很简单直观的爬取下来。但是Selenium的缺点也是显而易见的，相比于正则的匹配Selenium要加载浏览器以及更多的东西，他的执行速度比其他模块慢很多，所以若要保证速度，能不用Selenium就不要用Selenium吧。<blockquote>
+<p>web测试自动化：不同于单元测试和接口测试，web测试的自动化更加贴近于人的行为，通过对用户点击行为和文本输入行为等进行模拟，当web自动化登录成功后，就去获取这个数据进行断言。断言如果相等，测试通过；如果不相等，测试失败。用户可以看到某一项操作是否真的产生了，但是程序只能通过判断某些“证据”去判断之前的行为是否真的生效。</p>
+</blockquote>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="二、安装"><a href="#二、安装" class="headerlink" title="二、安装"></a>二、安装</h2><ul>
+<li>下载<a href="https://www.seleniumhq.org/" target="_blank" rel="noopener">Selenium</a>并安装</li>
+<li>安装对应浏览器的驱动程序 <a href="https://selenium-python.readthedocs.io/installation.html" target="_blank" rel="noopener">WebDriver</a><br>  驱动程序要和自己电脑上的浏览器版本相对应，比如我使用的chrome浏览器是72版本的，就要下载ChromeDriver2.46这个版本。<img src="https://img-blog.csdnimg.cn/20190303141436892.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><img src="https://img-blog.csdnimg.cn/20190303140853858.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>  下载解压之后配置环境变量Path即可。 <a href="https://blog.csdn.net/ywj_486/article/details/80940087" target="_blank" rel="noopener">Mac</a>对应的环境变量配置可以参考这位老哥的文章进行配置<h2 id="三、代码"><a href="#三、代码" class="headerlink" title="三、代码"></a>三、代码</h2><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/usr/bin/env python</span></span><br><span class="line"># -*- coding: utf-8 -*-</span><br><span class="line"></span><br><span class="line"><span class="keyword">from</span> selenium <span class="keyword">import</span> webdriver</span><br><span class="line"><span class="keyword">import</span> datetime</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">def login():</span><br><span class="line">    # 打开淘宝登录页，并进行扫码登录</span><br><span class="line">    browser.get(<span class="string">"https://www.taobao.com"</span>)</span><br><span class="line">    time.sleep(<span class="number">3</span>)</span><br><span class="line">    <span class="keyword">if</span> browser.find_element_by_link_text(<span class="string">"亲，请登录"</span>):</span><br><span class="line">        browser.find_element_by_link_text(<span class="string">"亲，请登录"</span>).click()</span><br><span class="line">        print(<span class="string">"请在15秒内完成扫码"</span>)</span><br><span class="line">        time.sleep(<span class="number">15</span>)</span><br><span class="line">        browser.get(<span class="string">"https://cart.taobao.com/cart.htm"</span>)</span><br><span class="line">    time.sleep(<span class="number">3</span>)</span><br><span class="line"></span><br><span class="line">    now = datetime.datetime.now()</span><br><span class="line">    print(<span class="string">'login success:'</span>, now.strftime(<span class="string">'%Y-%m-%d %H:%M:%S'</span>))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">def buy(times, choose):</span><br><span class="line">    is_buyed = False</span><br><span class="line">    # 点击购物车里全选按钮</span><br><span class="line">    <span class="keyword">if</span> choose == <span class="number">2</span>:</span><br><span class="line">        print(<span class="string">"请手动勾选需要购买的商品"</span>)</span><br><span class="line">    <span class="keyword">while</span> True:</span><br><span class="line">        now = datetime.datetime.now().strftime(<span class="string">'%Y-%m-%d %H:%M:%S.%f'</span>)</span><br><span class="line">        print(<span class="string">'现在时间：'</span>, now)</span><br><span class="line">        # 对比时间，时间到的话就点击结算</span><br><span class="line">        <span class="keyword">if</span> now &gt; times:</span><br><span class="line">            <span class="keyword">if</span> choose == <span class="number">1</span>:</span><br><span class="line">                <span class="keyword">while</span> True:</span><br><span class="line">                    <span class="keyword">try</span>:</span><br><span class="line">                        <span class="keyword">if</span> browser.find_element_by_id(<span class="string">"J_SelectAllcbx1"</span>):</span><br><span class="line">                            browser.find_element_by_id(<span class="string">"J_SelectAllcbx1"</span>).click()</span><br><span class="line">                            print(<span class="string">'尝试全选'</span>)</span><br><span class="line">                            <span class="keyword">break</span></span><br><span class="line">                    except:</span><br><span class="line">                        print(<span class="string">"找不到全选按钮"</span>)</span><br><span class="line">            # 点击结算按钮</span><br><span class="line">            <span class="keyword">try</span>:</span><br><span class="line">                <span class="keyword">if</span> browser.find_element_by_id(<span class="string">"J_Go"</span>):</span><br><span class="line">                    browser.find_element_by_id(<span class="string">"J_Go"</span>).click()</span><br><span class="line">                    print(<span class="string">"结算成功"</span>)</span><br><span class="line">            except:</span><br><span class="line">                pass</span><br><span class="line">            <span class="keyword">while</span> True:</span><br><span class="line">                <span class="keyword">try</span>:</span><br><span class="line">                    <span class="keyword">if</span> browser.find_element_by_link_text(<span class="string">'提交订单'</span>) and is_buyed == False:</span><br><span class="line">                        browser.find_element_by_link_text(<span class="string">'提交订单'</span>).click()</span><br><span class="line">                        now1 = datetime.datetime.now().strftime(<span class="string">'%Y-%m-%d %H:%M:%S.%f'</span>)</span><br><span class="line">                        print(<span class="string">"抢购成功时间：%s"</span> % now1)</span><br><span class="line">                except:</span><br><span class="line">                    print(<span class="string">"再次尝试提交订单"</span>)</span><br><span class="line">            time.sleep(<span class="number">0.005</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span><br><span class="line">    times = input(<span class="string">"请输入抢购时间，格式如(2018-09-06 11:20:00.000000):"</span>)</span><br><span class="line">    # 时间格式："2018-09-06 11:20:00.000000"</span><br><span class="line">    browser = webdriver.Chrome()</span><br><span class="line">    browser.maximize_window()</span><br><span class="line">    login()</span><br><span class="line">    choose = input(<span class="string">"到时间自动勾选购物车请输入“1”，否则输入“2”："</span>)</span><br><span class="line">    buy(times, choose)</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<h2 id="最后run-一把就ok了！！"><a href="#最后run-一把就ok了！！" class="headerlink" title="最后run()一把就ok了！！"></a>最后run()一把就ok了！！</h2>
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/08/02/一文学会Mybatis  Mybatis传入参数及返回类型/" rel="next" title="Mybatis传入参数及返回类型详解">
+                <i class="fa fa-chevron-left"></i> Mybatis传入参数及返回类型详解
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/08/02/IDEA进行SSM框架整合（附源码）/" rel="prev" title="IDEA进行SSM框架整合">
+                IDEA进行SSM框架整合 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">KevinLyz</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">27</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/qq_31749835" target="_blank" title="csdn">
+                      
+                        <i class="fa fa-fw fa-globe"></i>csdn</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#一、所需环境"><span class="nav-number">1.</span> <span class="nav-text">一、所需环境</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二、安装"><span class="nav-number">2.</span> <span class="nav-text">二、安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三、代码"><span class="nav-number">3.</span> <span class="nav-text">三、代码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#最后run-一把就ok了！！"><span class="nav-number">4.</span> <span class="nav-text">最后run()一把就ok了！！</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-KevinLyz"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">KevinLyz</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

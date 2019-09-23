@@ -229,7 +229,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/02/理解BIO、NIO、AIO/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/02/对Java类初始化顺序的一些理解/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="KevinLyz">
@@ -248,7 +248,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2019/08/02/理解BIO、NIO、AIO/" itemprop="url">理解BIO、NIO、AIO</a></h1>
+                <a class="post-title-link" href="/2019/08/02/对Java类初始化顺序的一些理解/" itemprop="url">对Java类初始化顺序的一些理解</a></h1>
         
 
         <div class="post-meta">
@@ -301,138 +301,13 @@
         
           
           
+静态代码块：用staitc声明，jvm加载类时执行，仅执行一次构造代码块：类中直接用{}定义，每一次创建对象时执行。执行顺序优先级：==(静态块| 静态变量)==  ,  main(),  ==（构造块|成员变量）== , 构造方法。括号内的内容根据声明的先后顺序进行执行。
 
-          
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2019/08/02/理解BIO、NIO、AIO/#more" rel="contents">
-              Read more &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/16/有关Java浮点数的一个有趣的例子以及一个尚未解决的疑惑（java在存储float值时采用的什么策略,是否存在舍入优化？）/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="KevinLyz">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Kevinlyz">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/07/16/有关Java浮点数的一个有趣的例子以及一个尚未解决的疑惑（java在存储float值时采用的什么策略,是否存在舍入优化？）/" itemprop="url">Untitled</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-16T10:47:38+08:00">
-                2019-07-16
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-          有关Java浮点数精度丢失的一个有趣的例子以及尚未解决的疑惑本文章重点在于表述最后的例子和尚未解决的疑问，故对于浮点数相关概念只是简单进行叙述
-一、浮点数的存储模式Java 语言支持两种基本的浮点类型： float 和 double 。java 的浮点类型都依据 IEEE 754 标准。IEEE 7
+构造函数12publ
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2019/07/16/有关Java浮点数的一个有趣的例子以及一个尚未解决的疑惑（java在存储float值时采用的什么策略,是否存在舍入优化？）/#more" rel="contents">
+            <a class="btn" href="/2019/08/02/对Java类初始化顺序的一些理解/#more" rel="contents">
               Read more &raquo;
             </a>
           </div>
@@ -483,7 +358,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/16/Spring IoC概念理解、Spring对Bean的管理方式和几种注入方法的分析/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/02/JVM的client模式和Server模式（不要随便搞）/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="KevinLyz">
@@ -502,7 +377,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2019/07/16/Spring IoC概念理解、Spring对Bean的管理方式和几种注入方法的分析/" itemprop="url">Untitled</a></h1>
+                <a class="post-title-link" href="/2019/08/02/JVM的client模式和Server模式（不要随便搞）/" itemprop="url">JVM的client模式和Server模式（不要随便搞）</a></h1>
         
 
         <div class="post-meta">
@@ -514,8 +389,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-16T10:47:32+08:00">
-                2019-07-16
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-08-02T09:43:18+08:00">
+                2019-08-02
               </time>
             
 
@@ -554,14 +429,12 @@
       
         
           
-          Spring IoC概念理解、Spring对Bean的管理方式和几种注入方法的分析一、核心概念
-IOC： 控制反转( Inversion of Control)/依赖注入(Dependency Injection) ：由Spring容器负责对象的生命周期和对象之间的依赖关系如何理解控制反转？
-
-谁控
+          昨天朋友问了我一个问题，JVM client模式和Server模式之间的区别，对于这个问题之前并不知道，后来经过了一番查阅大致了解了一下，在这里简单做一下记录。
+一、如何查看JVM当前的模式想要查看JVM当前所处的模式很简单，只需要我们安装jdk时候的java -version命令就可以看到当然我们
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2019/07/16/Spring IoC概念理解、Spring对Bean的管理方式和几种注入方法的分析/#more" rel="contents">
+            <a class="btn" href="/2019/08/02/JVM的client模式和Server模式（不要随便搞）/#more" rel="contents">
               Read more &raquo;
             </a>
           </div>
@@ -612,7 +485,7 @@ IOC： 控制反转( Inversion of Control)/依赖注入(Dependency Injection) �
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/16/Java包装类及自动装箱、拆箱/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/02/Java位运算不一定比乘法快 (关于java数据运算的一些思考)/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="KevinLyz">
@@ -631,7 +504,7 @@ IOC： 控制反转( Inversion of Control)/依赖注入(Dependency Injection) �
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2019/07/16/Java包装类及自动装箱、拆箱/" itemprop="url">Untitled</a></h1>
+                <a class="post-title-link" href="/2019/08/02/Java位运算不一定比乘法快 (关于java数据运算的一些思考)/" itemprop="url">Java位运算不一定比乘法快 (关于java数据运算的一些思考)</a></h1>
         
 
         <div class="post-meta">
@@ -643,8 +516,8 @@ IOC： 控制反转( Inversion of Control)/依赖注入(Dependency Injection) �
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-16T10:47:26+08:00">
-                2019-07-16
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-08-02T09:43:18+08:00">
+                2019-08-02
               </time>
             
 
@@ -683,51 +556,15 @@ IOC： 控制反转( Inversion of Control)/依赖注入(Dependency Injection) �
       
         
           
-          Java包装类
+          
+wtf？？？Java乘法会比位运算快？？你一定是在逗我！！哈哈哈，当时也困扰了我，让我们继续向下看。
 
-
-基本类型
-大小
-包装器类型
-
-
-
-boolean
-/
-Boolean
-
-
-char
-16bit
-Boolean
-
-
-byte
-8bit
-Byte
-
-
-short
-/16bit
-Short
-
-
-int
-32bit
-Integer
-
-
-long
-64bit
-Long
-
-
-float
-
+  我们学习c的时候，都会遇到位运算快于乘法运算的情况，当时老师讲的是计算机只有加法运算，乘法运算的运算需要多次的进位和转换，所以位运算的效率要远远高于乘法运算。
+管中窥豹，将相同的情况拿到了j
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2019/07/16/Java包装类及自动装箱、拆箱/#more" rel="contents">
+            <a class="btn" href="/2019/08/02/Java位运算不一定比乘法快 (关于java数据运算的一些思考)/#more" rel="contents">
               Read more &raquo;
             </a>
           </div>
@@ -778,7 +615,7 @@ float
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/16/Java注解学习，反射机制获取由注解标记的信息并构建sql查询语句/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/02/Java包装类及自动装箱、拆箱/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="KevinLyz">
@@ -797,7 +634,7 @@ float
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2019/07/16/Java注解学习，反射机制获取由注解标记的信息并构建sql查询语句/" itemprop="url">Untitled</a></h1>
+                <a class="post-title-link" href="/2019/08/02/Java包装类及自动装箱、拆箱/" itemprop="url">Java包装类</a></h1>
         
 
         <div class="post-meta">
@@ -809,8 +646,8 @@ float
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-16T10:47:20+08:00">
-                2019-07-16
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-08-02T09:43:18+08:00">
+                2019-08-02
               </time>
             
 
@@ -849,16 +686,273 @@ float
       
         
           
-          java注解学习笔记一、jdk中的注解jdk中都属于编译时注解，在编译前就会提示错误，总共有两种注解：
+          ##| 基本类型 | 大小 | 包装器类型 ||–|–|–|| boolean | / |  Boolean || char | 16bit |  Boolean || byte | 8bit |  Byte || short | /16bit|  Short || int | 32bit |  I
+          ...
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2019/08/02/Java包装类及自动装箱、拆箱/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/02/Java匿名对象的性能优势分析/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="KevinLyz">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Kevinlyz">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/08/02/Java匿名对象的性能优势分析/" itemprop="url">Java匿名对象的性能优势分析</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-08-02T09:43:18+08:00">
+                2019-08-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+          
+今天思考了一下java在使用匿名方式创建对象和普通的句柄方式对java传递对象的性能进行了一点简单的思考，可能不是很全面，在某些方面的理解也能有些偏差，欢迎各位大佬探讨指正！
+
+首先阐明结论：对于能够使用匿名对象进行对象创建和传递的时候，是具有一定性能优势的，尤其是对于大量对象创建的时候，差异更加
+          ...
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2019/08/02/Java匿名对象的性能优势分析/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/02/Java注解学习，反射机制获取由注解标记的信息并构建sql查询语句/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="KevinLyz">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Kevinlyz">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/08/02/Java注解学习，反射机制获取由注解标记的信息并构建sql查询语句/" itemprop="url">java注解学习笔记</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-08-02T09:43:18+08:00">
+                2019-08-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+          一、jdk中的注解jdk中都属于编译时注解，在编译前就会提示错误，总共有两种注解：
 
 @Deprecated 注解 表示方法已过时
 @Suppress Warning注解：忽略由Deprecated注解造成的警告
 
-二、java第三方注解这里只列举了Spring和Mybatis中
+二、java第三方注解这里只列举了Spring和Mybatis中常见的几个
+
+Spr
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2019/07/16/Java注解学习，反射机制获取由注解标记的信息并构建sql查询语句/#more" rel="contents">
+            <a class="btn" href="/2019/08/02/Java注解学习，反射机制获取由注解标记的信息并构建sql查询语句/#more" rel="contents">
               Read more &raquo;
             </a>
           </div>
@@ -909,7 +1003,7 @@ float
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/16/python+selenium+chrome实现淘宝购物车秒杀自动结算/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/02/Spring IoC概念理解、Spring对Bean的管理方式和几种注入方法的分析/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="KevinLyz">
@@ -928,7 +1022,7 @@ float
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2019/07/16/python+selenium+chrome实现淘宝购物车秒杀自动结算/" itemprop="url">Untitled</a></h1>
+                <a class="post-title-link" href="/2019/08/02/Spring IoC概念理解、Spring对Bean的管理方式和几种注入方法的分析/" itemprop="url">Spring IoC概念理解、Spring对Bean的管理方式和几种注入方法的分析</a></h1>
         
 
         <div class="post-meta">
@@ -940,8 +1034,8 @@ float
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-16T10:47:14+08:00">
-                2019-07-16
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-08-02T09:43:18+08:00">
+                2019-08-02
               </time>
             
 
@@ -980,16 +1074,14 @@ float
       
         
           
-          @TOC
+          一、核心概念
+IOC： 控制反转( Inversion of Control)/依赖注入(Dependency Injection) ：由Spring容器负责对象的生命周期和对象之间的依赖关系如何理解控制反转？
 
-之前总是想要买aj，但是淘宝店铺每次发售手动抢的时候一般都会被黄牛抢走。。。最近毕业设计学习了一下python的东西，所以写了这么一个抢购的东西算是解决自己一个小小的愿望，这可是aj啊。我会把内容写的尽量面向初学者，从头至尾的过程都会有所提及。代码也放在了后面
-
-一、所需环境
-Selen
+谁控制谁？ IOC容器控制对象。传统的开发模式，我们都是采用直接new对象的方式来创建
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2019/07/16/python+selenium+chrome实现淘宝购物车秒杀自动结算/#more" rel="contents">
+            <a class="btn" href="/2019/08/02/Spring IoC概念理解、Spring对Bean的管理方式和几种注入方法的分析/#more" rel="contents">
               Read more &raquo;
             </a>
           </div>
@@ -1040,7 +1132,7 @@ Selen
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/16/String的不可变性及StringBuilder原理/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/02/String的不可变性及StringBuilder原理/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="KevinLyz">
@@ -1059,7 +1151,7 @@ Selen
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2019/07/16/String的不可变性及StringBuilder原理/" itemprop="url">Untitled</a></h1>
+                <a class="post-title-link" href="/2019/08/02/String的不可变性及StringBuilder原理/" itemprop="url">String的不可变性及StringBuilder原理</a></h1>
         
 
         <div class="post-meta">
@@ -1071,8 +1163,8 @@ Selen
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-16T10:44:52+08:00">
-                2019-07-16
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-08-02T09:43:18+08:00">
+                2019-08-02
               </time>
             
 
@@ -1111,15 +1203,14 @@ Selen
       
         
           
-          @TOC
-一、String的不可变性
+          一、String的不可变性
 关于String类型的具体分析，可以参考我另一篇博客第三小节的补充内容，有很详细的叙述。   String 对象的两种创建方式
 
-12345678910 String str1 = "str";String str2 = "ing";String str3 = 
+12345678910 String str1 = "str";String str2 = "ing";String str3 = "str"
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2019/07/16/String的不可变性及StringBuilder原理/#more" rel="contents">
+            <a class="btn" href="/2019/08/02/String的不可变性及StringBuilder原理/#more" rel="contents">
               Read more &raquo;
             </a>
           </div>
@@ -1170,7 +1261,7 @@ Selen
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/16/Java匿名对象的性能优势分析/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/02/final和static关键字辨析/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="KevinLyz">
@@ -1189,7 +1280,7 @@ Selen
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2019/07/16/Java匿名对象的性能优势分析/" itemprop="url">Untitled</a></h1>
+                <a class="post-title-link" href="/2019/08/02/final和static关键字辨析/" itemprop="url">final和static关键字辨析</a></h1>
         
 
         <div class="post-meta">
@@ -1201,8 +1292,8 @@ Selen
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-16T10:44:47+08:00">
-                2019-07-16
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-08-02T09:43:18+08:00">
+                2019-08-02
               </time>
             
 
@@ -1241,15 +1332,15 @@ Selen
       
         
           
-          @TOC
+          final关键字final关键字被用于修饰 变量，方法和类final修饰的变量若为基本数据类型，值不可改变，如为引用数据类型，则引用指向不可改变。当final修饰一个类时，final类中所有的成员方法都会被隐式的指定为final类型
+static关键字调用格式：
 
-今天思考了一下java在使用匿名方式创建对象和普通的句柄方式对java传递对象的性能进行了一点简单的思考，可能不是很全面，在某些方面的理解也能有些偏差，欢迎各位大佬探讨指正！
-
-首先阐明结论：对于能够使用匿名对象进行对象创建和传递的时候，是具有一定性能优势的，尤其是对于大量对象创建的时候
+类名.静态变量名
+类名.静态方法名
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2019/07/16/Java匿名对象的性能优势分析/#more" rel="contents">
+            <a class="btn" href="/2019/08/02/final和static关键字辨析/#more" rel="contents">
               Read more &raquo;
             </a>
           </div>
@@ -1300,7 +1391,7 @@ Selen
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/16/一文学会Mybatis  Mybatis传入参数及返回类型/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/02/IDEA进行SSM框架整合（附源码）/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="KevinLyz">
@@ -1319,7 +1410,7 @@ Selen
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2019/07/16/一文学会Mybatis  Mybatis传入参数及返回类型/" itemprop="url">Untitled</a></h1>
+                <a class="post-title-link" href="/2019/08/02/IDEA进行SSM框架整合（附源码）/" itemprop="url">IDEA进行SSM框架整合</a></h1>
         
 
         <div class="post-meta">
@@ -1331,8 +1422,8 @@ Selen
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-16T10:44:41+08:00">
-                2019-07-16
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-08-02T09:43:18+08:00">
+                2019-08-02
               </time>
             
 
@@ -1371,147 +1462,13 @@ Selen
       
         
           
-          @TOC
-一、Mybatis的三种传入参数的方式1. 根据下标索引传值通过传递参数的顺序进行索引，获得参数的值
-123456Public User selectUser(String name,String area);&lt;select id="selectUser" resultMap="Ba
+          一、创建Maven项目
+二、配置pom文件其中关于引入的各个jar包的作用，大部分都添加了注释，个别的自己项目用不到的内容，可自行取舍。
+123456789101112131415161718192021222324252627282930313233343536373839404142434445
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2019/07/16/一文学会Mybatis  Mybatis传入参数及返回类型/#more" rel="contents">
-              Read more &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/16/理解Spring家族生态体系/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="KevinLyz">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Kevinlyz">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/07/16/理解Spring家族生态体系/" itemprop="url">Untitled</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-16T10:44:35+08:00">
-                2019-07-16
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-          @TOC
-第一阶段 spring-core开发单体应用，提供便捷的数据库访问功能，还提供mvc功能，通过aop，ioc连接在一起，使得我们的程序能够做到低耦合，可扩展
-
-spring core；常用的ioc及aop 的内容
-spring security：针对安全方面
-
-
-
-spring data：
-          ...
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2019/07/16/理解Spring家族生态体系/#more" rel="contents">
+            <a class="btn" href="/2019/08/02/IDEA进行SSM框架整合（附源码）/#more" rel="contents">
               Read more &raquo;
             </a>
           </div>
