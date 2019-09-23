@@ -86,17 +86,17 @@
 <meta property="og:site_name" content="Kevinlyz">
 <meta property="og:description" content="@toc 写在前面在正式开始文章的阅读之前，我们还要区分几个概念，这很重要：（很多博客对Java内存模型，Java内存区域结构混一谈，丝毫不加辨析，以至于很多时候看完之后还是云里雾里）  Java内存模型：JMM与==多线程相关==，看起来和Java内存区域很相似，但JMM是一个抽象的概念，不是具体存在的。JMM描述了一组规则或规范，这个规范定义了一个线程对共享变量的操作对其他线程是可见的。 Ja">
 <meta property="og:locale" content="default">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/20190605194151762.png">
+<meta property="og:image" content="http://pupz1h5ae.bkt.clouddn.com/1.8.png">
 <meta property="og:image" content="https://img-blog.csdnimg.cn/2019060519421961.png">
 <meta property="og:image" content="https://img-blog.csdnimg.cn/20190327152912955.png">
 <meta property="og:image" content="https://img-blog.csdnimg.cn/20190605194340336.png">
 <meta property="og:image" content="https://img-blog.csdnimg.cn/20190327161244682.png">
 <meta property="og:image" content="https://img-blog.csdnimg.cn/20190327161533151.png">
-<meta property="og:updated_time" content="2019-07-16T03:44:08.791Z">
+<meta property="og:updated_time" content="2019-07-16T05:59:44.869Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="从Java的各种基本数据类型看Java内存区域划分">
 <meta name="twitter:description" content="@toc 写在前面在正式开始文章的阅读之前，我们还要区分几个概念，这很重要：（很多博客对Java内存模型，Java内存区域结构混一谈，丝毫不加辨析，以至于很多时候看完之后还是云里雾里）  Java内存模型：JMM与==多线程相关==，看起来和Java内存区域很相似，但JMM是一个抽象的概念，不是具体存在的。JMM描述了一组规则或规范，这个规范定义了一个线程对共享变量的操作对其他线程是可见的。 Ja">
-<meta name="twitter:image" content="https://img-blog.csdnimg.cn/20190605194151762.png">
+<meta name="twitter:image" content="http://pupz1h5ae.bkt.clouddn.com/1.8.png">
 
 
 
@@ -322,7 +322,7 @@
 <li>String str1和String str2的两种声明方式相同吗？ 答案是否定的，我们先阐述结果，然后带着疑问继续看后面的分析。<br>首先str1和str2的内容是存储在stack（栈）中的，他们是分别指向自己应当指向的内存区域（可能是栈中，也可能是堆中）<br>str1是一个String类型的内容，”abc”在编译时被放入静态常量池（也就是class常量池）中，运行时被拿到运行时常量池中的字符串常量池，然后由str1指向”abc”的区域。<br>str2的 new String(“abc”)是存储在内存区域中的堆中的，这个new的过程是在运行期初始化阶段才确定的，然后Stack上的str2指向heap（堆）上的new String(“abc”)。<br>因为他们是指向的不同的内存区域，System.out.println(str1 == str2); 的结果也自然就是false了。</li>
 </ul>
 <h2 id="二、Java内存区域的划分（运行时数据区）"><a href="#二、Java内存区域的划分（运行时数据区）" class="headerlink" title="二、Java内存区域的划分（运行时数据区）"></a>二、Java内存区域的划分（运行时数据区）</h2><p>Java 虚拟机在执行 Java 程序的过程中会把它管理的内存划分成若干个不同的数据区域。</p>
-<p>1.8之前：<br><img src="https://img-blog.csdnimg.cn/20190605194151762.png" alt="1.8版本"><br>1.8之后：<br><img src="https://img-blog.csdnimg.cn/2019060519421961.png" alt="1.8之后"><br>我们可以把它们分为两个类型的区域，一种是线程私有的，另一种是线程共享的。</p>
+<p>1.8之前：<br><img src="http://pupz1h5ae.bkt.clouddn.com/1.8.png" alt="1.8版本"><br>1.8之后：<br><img src="https://img-blog.csdnimg.cn/2019060519421961.png" alt="1.8之后"><br>我们可以把它们分为两个类型的区域，一种是线程私有的，另一种是线程共享的。</p>
 <ul>
 <li>线程共享的区域：<ul>
 <li>堆（Heap）</li>
@@ -478,8 +478,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2019/07/16/从头开始实现一个小型spring框架——手写Spring之集成Tomcat服务器/" rel="prev" title>
-                 <i class="fa fa-chevron-right"></i>
+              <a href="/2019/07/16/从头开始实现一个小型spring框架——实现Bean管理  IOC与DI（解决循环依赖）/" rel="prev" title="手写Spring之 实现Bean管理（IOC与DI）">
+                手写Spring之 实现Bean管理（IOC与DI） <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -557,7 +557,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">26</span>
+                  <span class="site-state-item-count">27</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
