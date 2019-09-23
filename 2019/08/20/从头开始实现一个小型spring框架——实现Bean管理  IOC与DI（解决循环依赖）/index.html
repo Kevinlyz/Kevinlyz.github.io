@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/head.jpg?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/head.jpg?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/head.jpg?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="@[TOC](手写Spring之 实现Bean管理（IOC与DI）) 写在前面最近学习了一下spring的相关内容，所以也就想要照猫画虎地记录和实现一下spring的框架，通过阅读这些也希望能够消除对Spring框架的恐惧，其实细心阅读框架也很容易理解。mini-spring尽量实现spring的核心功能。文章写得很仓促，可能不是很全面，在全部完成之后我们再来完善表达吧，见谅~ 项目的源码我放在了">
+<meta property="og:type" content="article">
+<meta property="og:title" content="从头开始实现一个小型spring框架——实现Bean管理  IOC与DI（解决循环依赖）">
+<meta property="og:url" content="http://yoursite.com/2019/08/20/从头开始实现一个小型spring框架——实现Bean管理  IOC与DI（解决循环依赖）/index.html">
+<meta property="og:site_name" content="Kevinlyz">
+<meta property="og:description" content="@[TOC](手写Spring之 实现Bean管理（IOC与DI）) 写在前面最近学习了一下spring的相关内容，所以也就想要照猫画虎地记录和实现一下spring的框架，通过阅读这些也希望能够消除对Spring框架的恐惧，其实细心阅读框架也很容易理解。mini-spring尽量实现spring的核心功能。文章写得很仓促，可能不是很全面，在全部完成之后我们再来完善表达吧，见谅~ 项目的源码我放在了">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190609091739304.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/2019060909185459.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_11,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_10,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190609183422606.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190609191306137.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70">
+<meta property="og:updated_time" content="2019-09-23T03:02:32.777Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="从头开始实现一个小型spring框架——实现Bean管理  IOC与DI（解决循环依赖）">
+<meta name="twitter:description" content="@[TOC](手写Spring之 实现Bean管理（IOC与DI）) 写在前面最近学习了一下spring的相关内容，所以也就想要照猫画虎地记录和实现一下spring的框架，通过阅读这些也希望能够消除对Spring框架的恐惧，其实细心阅读框架也很容易理解。mini-spring尽量实现spring的核心功能。文章写得很仓促，可能不是很全面，在全部完成之后我们再来完善表达吧，见谅~ 项目的源码我放在了">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/20190609091739304.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/08/20/从头开始实现一个小型spring框架——实现Bean管理  IOC与DI（解决循环依赖）/">
+
+
+
+
+
+  <title>从头开始实现一个小型spring框架——实现Bean管理  IOC与DI（解决循环依赖） | Kevinlyz</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="default">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Kevinlyz</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">当你的才华还撑不起你的野心时，你就应该静下心来学习。</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/20/从头开始实现一个小型spring框架——实现Bean管理  IOC与DI（解决循环依赖）/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="KevinLyz">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Kevinlyz">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">从头开始实现一个小型spring框架——实现Bean管理  IOC与DI（解决循环依赖）</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-08-20T09:18:34+08:00">
+                2019-08-20
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>@[TOC](手写Spring之 实现Bean管理（IOC与DI）)</p>
+<h2 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h2><p>最近学习了一下spring的相关内容，所以也就想要照猫画虎地记录和实现一下spring的框架，通过阅读这些也希望能够消除对Spring框架的恐惧，其实细心阅读框架也很容易理解。<br>mini-spring尽量实现spring的核心功能。文章写得很仓促，可能不是很全面，在全部完成之后我们再来完善表达吧，见谅~</p>
+<p><strong>项目的源码我放在了github上：</strong><a href="https://github.com/Kevinlyz/mini-spring" target="_blank" rel="noopener">源码地址</a></p>
+<p><strong>我会在这里整理文章的系列目录：</strong></p>
+<ol>
+<li><a href="https://blog.csdn.net/qq_31749835/article/details/90812799" target="_blank" rel="noopener">从头开始实现一个小型spring框架——手写Spring之实现SpringBoot启动</a></li>
+<li><a href="https://blog.csdn.net/qq_31749835/article/details/90933527" target="_blank" rel="noopener">从头开始实现一个小型spring框架——手写Spring之集成Tomcat服务器</a></li>
+<li><a href="https://blog.csdn.net/qq_31749835/article/details/91038594" target="_blank" rel="noopener">从头开始实现一个小型spring框架——控制器controller的实现</a></li>
+<li><a href="https://blog.csdn.net/qq_31749835/article/details/91350454" target="_blank" rel="noopener">从头开始实现一个小型spring框架——实现Bean管理（IOC与DI）</a></li>
+</ol>
+<h2 id="一、bean管理"><a href="#一、bean管理" class="headerlink" title="一、bean管理"></a>一、bean管理</h2><h3 id="1-1-什么是bean？"><a href="#1-1-什么是bean？" class="headerlink" title="1.1 什么是bean？"></a>1.1 什么是bean？</h3><ul>
+<li>bean是spring抽象出的概念<br>  区别于普通的对象，bean的声明周期一般较长。</li>
+<li>在整个虚拟机中都是可见的<br>  普通的对象仅在当前类可见，在其他类中是引用不到的。因此对bean的维护成本要高于对普通对象的维护。</li>
+<li>bean一般单例存在<br>正因为对bean的维护成本很高，因此bean==单例==存在。<h3 id="1-2-bean优势"><a href="#1-2-bean优势" class="headerlink" title="1.2 bean优势"></a>1.2 bean优势</h3></li>
+<li>运行期效率高<br>bean在项目启动时初始化，使用时直接获取，提高了获取对象的性能；也减少了代码在维护上成本；减少了对象使用过后被抛弃的情况，降低虚拟机在gc时的压力。</li>
+<li>统一维护，便于管理和拓展</li>
+</ul>
+<p><strong>不必处理链式的依赖</strong></p>
+<ul>
+<li>单例存在</li>
+</ul>
+<h2 id="二、依赖注入和控制反转"><a href="#二、依赖注入和控制反转" class="headerlink" title="二、依赖注入和控制反转"></a>二、依赖注入和控制反转</h2><p>很多人认为控制反转和依赖注入是相同的，其实这是一个误区。</p>
+<h3 id="2-1-控制反转"><a href="#2-1-控制反转" class="headerlink" title="2.1 控制反转"></a>2.1 控制反转</h3><p>IOC（Inversion of Control）：==思想==<br>控制反转是一种设计的原则和思想，用来降低代码之间的耦合度。</p>
+<h3 id="2-2-依赖注入"><a href="#2-2-依赖注入" class="headerlink" title="2.2 依赖注入"></a>2.2 依赖注入</h3><p>DI（Dependency Injection）：==方式==<br>依赖注入是实现IOC的一种方式。<br>采用依赖注入的方式，类A中只需要定义一个B的属性，不需要通过new来获取对象，二是通过bean容器将对象new出来，并注入到A对象的引用里。</p>
+<p>控制正转方式：</p>
+<img src="https://img-blog.csdnimg.cn/20190609091739304.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70" width="70%" height="70%">
+
+
+
+<p>控制反转创建的方式：<br><img src="https://img-blog.csdnimg.cn/2019060909185459.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_11,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_10,color_FFFFFF,t_70" width="70%" height="70%"></p>
+<h2 id="三、实现"><a href="#三、实现" class="headerlink" title="三、实现"></a>三、实现</h2><p>因为我们已经在上一篇文章中实现了包扫描，所以可以非常方便获取到类的信息。<br>获取到类的信息后，我们就要根据是否存在需要注入的依赖来实例化 Bean对象了，我们来看具体的实现：</p>
+<h3 id="3-1-包结构的改变"><a href="#3-1-包结构的改变" class="headerlink" title="3.1 包结构的改变"></a>3.1 包结构的改变</h3><p>直接看下图</p>
+<img src="https://img-blog.csdnimg.cn/20190609183422606.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70" height="55%" width="55%">
+
+<p>更改后的内容添加了对依赖注入的实现，具体有</p>
+<p>framework模块：</p>
+<ul>
+<li>beans包下增加<ul>
+<li>Autowired自定义注解：用于标记需要进行注入的域</li>
+<li>Bean自定义注解：标记类为需要实例化的Bean<br>test模块</li>
+</ul>
+</li>
+<li>service包增加<ul>
+<li>UserService :实现到controller的注入</li>
+</ul>
+</li>
+</ul>
+<h3 id="3-2-具体实现"><a href="#3-2-具体实现" class="headerlink" title="3.2 具体实现"></a>3.2 具体实现</h3><h4 id="framework模块"><a href="#framework模块" class="headerlink" title="framework模块"></a>framework模块</h4><p><strong>Autowired标记注解</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.qcby.beans;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.lang.annotation.*;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Documented</span></span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="meta">@Target</span>(ElementType.FIELD)</span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> Autowired &#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>Bean注解</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.qcby.beans;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.lang.annotation.*;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Documented</span></span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="meta">@Target</span>(ElementType.TYPE)</span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> Bean &#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>BeanFactory工厂</strong></p>
+<p>这是本次实现的核心代码，将Bean通过map的形式进行保存，提供getBean，initBean方法对Bean容器内的实例进行获取和初始化Bean容器</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.qcby.beans;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> com.qcby.web.mvc.Controller;</span><br><span class="line"><span class="keyword">import</span> org.omg.PortableInterceptor.SYSTEM_EXCEPTION;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.lang.reflect.Field;</span><br><span class="line"><span class="keyword">import</span> java.util.ArrayList;</span><br><span class="line"><span class="keyword">import</span> java.util.List;</span><br><span class="line"><span class="keyword">import</span> java.util.Map;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.ConcurrentHashMap;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> kevinlyz</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@ClassName</span> BeanFactory</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span> bean工厂</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Date</span> 2019-06-09 11:09</span></span><br><span class="line"><span class="comment"> **/</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">BeanFactory</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//ConcurrentHashMap保存bean</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> Map&lt;Class&lt;?&gt;,Object&gt; classToBean = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="comment">//获取bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Object <span class="title">getBean</span><span class="params">(Class&lt;?&gt; cls)</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> classToBean.get(cls);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">   <span class="comment">//初始化</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">initBean</span><span class="params">(List&lt;Class&lt;?&gt;&gt; classList)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        List&lt;Class&lt;?&gt;&gt; toCreate = <span class="keyword">new</span> ArrayList&lt;&gt;(classList);</span><br><span class="line">       </span><br><span class="line">        <span class="comment">//循环实例化bean，判断是否存在循环依赖</span></span><br><span class="line">        <span class="keyword">while</span> (toCreate.size() != <span class="number">0</span>)&#123;</span><br><span class="line">            <span class="keyword">int</span> remainSize = toCreate.size();</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">0</span>;i&lt;toCreate.size();i++)&#123;</span><br><span class="line">                <span class="keyword">if</span> (finishCreate(toCreate.get(i)))&#123;</span><br><span class="line">                    toCreate.remove(i);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (toCreate.size() == remainSize)&#123;         <span class="comment">//陷入死循环，抛出异常</span></span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> Exception(<span class="string">"循环依赖异常"</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//创建bean</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">boolean</span> <span class="title">finishCreate</span><span class="params">(Class&lt;?&gt; cls)</span> <span class="keyword">throws</span> IllegalAccessException, InstantiationException </span>&#123;</span><br><span class="line">        <span class="comment">//不是bean直接返回true并删除</span></span><br><span class="line">        <span class="keyword">if</span> (!cls.isAnnotationPresent(Bean.class) &amp;&amp; !cls.isAnnotationPresent(Controller.class))&#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//创建对象</span></span><br><span class="line">        Object bean = cls.newInstance();</span><br><span class="line"></span><br><span class="line">        <span class="comment">//解决存在的依赖；获取域并判断是否被Autowired注解</span></span><br><span class="line">        <span class="keyword">for</span> (Field field : cls.getDeclaredFields())&#123;</span><br><span class="line">            <span class="keyword">if</span> (field.isAnnotationPresent(Autowired.class))&#123;        <span class="comment">//存在Autowired注解</span></span><br><span class="line">                Class&lt;?&gt; fieldType = field.getType();</span><br><span class="line">                Object reliantBean = BeanFactory.getBean(fieldType);        <span class="comment">//从Bean工厂内获取被依赖的bean</span></span><br><span class="line">                <span class="keyword">if</span> (reliantBean == <span class="keyword">null</span>)&#123;</span><br><span class="line">                    <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                field.setAccessible(<span class="keyword">true</span>);</span><br><span class="line">                field.set(bean,reliantBean);            <span class="comment">//为bean设置依赖域</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        classToBean.put(cls,bean);</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>修改MiniApplication，对Bean工厂进行初始化</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">BeanFactory.initBean(classList);</span><br></pre></td></tr></table></figure>
+
+<p>完整代码为</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.qcby.starter;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> com.qcby.beans.BeanFactory;</span><br><span class="line"><span class="keyword">import</span> com.qcby.core.ClassScanner;</span><br><span class="line"><span class="keyword">import</span> com.qcby.web.handler.HandlerManagger;</span><br><span class="line"><span class="keyword">import</span> com.qcby.web.server.TomcatServer;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.util.List;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> kevinlyz</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@ClassName</span> MiniApplication</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span> 框架的入口类</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Date</span> 2019-06-04 19:21</span></span><br><span class="line"><span class="comment"> **/</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MiniApplication</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">(Class&lt;?&gt; cls,String[] args)</span></span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"Hello mini-spring application！"</span>);</span><br><span class="line">        TomcatServer tomcatServer = <span class="keyword">new</span> TomcatServer(args);</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            tomcatServer.startServer();</span><br><span class="line">            List&lt;Class&lt;?&gt;&gt; classList = ClassScanner.scannClasses(cls.getPackage().getName());</span><br><span class="line">            BeanFactory.initBean(classList);</span><br><span class="line">            classList.forEach(it-&gt;System.out.println(it.getName()));</span><br><span class="line">            HandlerManagger.resolveMappingHandler(classList);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>修改MappingHandler获取Bean的方式为从工厂中获取</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">Object ctl = BeanFactory.getBean(controller);</span><br></pre></td></tr></table></figure>
+
+<p>完整代码为</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.qcby.web.handler;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> com.qcby.beans.Bean;</span><br><span class="line"><span class="keyword">import</span> com.qcby.beans.BeanFactory;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> javax.servlet.ServletRequest;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.ServletResponse;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletRequest;</span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"><span class="keyword">import</span> java.lang.reflect.InvocationTargetException;</span><br><span class="line"><span class="keyword">import</span> java.lang.reflect.Method;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> kevinlyz</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@ClassName</span> MappingHandler</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span> 包含uri，类的方法信息，类信息和参数</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Date</span> 2019-06-08 18:32</span></span><br><span class="line"><span class="comment"> **/</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MappingHandler</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> String uri;</span><br><span class="line">    <span class="keyword">private</span> Method method;</span><br><span class="line">    <span class="keyword">private</span> Class&lt;?&gt; controller;</span><br><span class="line">    <span class="keyword">private</span> String[] args;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">MappingHandler</span><span class="params">(String uri, Method method, Class&lt;?&gt; controller, String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.uri = uri;</span><br><span class="line">        <span class="keyword">this</span>.method = method;</span><br><span class="line">        <span class="keyword">this</span>.controller = controller;</span><br><span class="line">        <span class="keyword">this</span>.args = args;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">handle</span><span class="params">(ServletRequest req, ServletResponse res)</span> <span class="keyword">throws</span> IllegalAccessException, InstantiationException, InvocationTargetException, IOException </span>&#123;</span><br><span class="line">        String reqUri = ((HttpServletRequest)req).getRequestURI();</span><br><span class="line">        <span class="keyword">if</span> (!<span class="keyword">this</span>.uri.equals(reqUri))</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//相等则调用Handler的resolveMappingHandler方法,实例化并返回</span></span><br><span class="line">        Object[] parameters = <span class="keyword">new</span> Object[args.length];</span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">0</span>;i&lt;args.length;i++)&#123;</span><br><span class="line">            parameters[i] = req.getParameter(args[i]);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        Object ctl = BeanFactory.getBean(controller);</span><br><span class="line">        Object response = method.invoke(ctl,parameters);</span><br><span class="line">        res.getWriter().println(response.toString());</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="test模块"><a href="#test模块" class="headerlink" title="test模块"></a>test模块</h4><p>添加UserService</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.qcby.service;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> com.qcby.beans.Bean;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> kevinlyz</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@ClassName</span> UserService</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span> TODO</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Date</span> 2019-06-09 13:37</span></span><br><span class="line"><span class="comment"> **/</span></span><br><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">UserService</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getInfo</span><span class="params">(String name)</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> name+<span class="string">" is handsome!!"</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>修改UserController</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.qcby.controller;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> com.qcby.beans.Autowired;</span><br><span class="line"><span class="keyword">import</span> com.qcby.service.UserService;</span><br><span class="line"><span class="keyword">import</span> com.qcby.web.mvc.Controller;</span><br><span class="line"><span class="keyword">import</span> com.qcby.web.mvc.RequestMapping;</span><br><span class="line"><span class="keyword">import</span> com.qcby.web.mvc.RequestParam;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> kevinlyz</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@ClassName</span> UserController</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span> TODO</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Date</span> 2019-06-08 17:14</span></span><br><span class="line"><span class="comment"> **/</span></span><br><span class="line"><span class="meta">@Controller</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">UserController</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> UserService userService;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@RequestMapping</span>(<span class="string">"/test"</span>)</span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">test</span><span class="params">(@RequestParam(<span class="string">"name"</span>)</span> String name,@<span class="title">RequestParam</span><span class="params">(<span class="string">"desc"</span>)</span> String desc)</span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"test访问了！"</span>);</span><br><span class="line">        System.out.println(<span class="string">"name&gt;&gt;&gt;&gt;&gt;&gt;&gt;"</span>+name);</span><br><span class="line">        <span class="keyword">return</span> userService.getInfo(name);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-3-测试"><a href="#3-3-测试" class="headerlink" title="3.3 测试"></a>3.3 测试</h3><p>再熟悉不过的流程了</p>
+<p>构建：<code>gradle build</code><br>运行：<code>java -jar test/build/libs/test-1.0-SNAPSHOT.jar</code> </p>
+<p>然后在浏览器输入需要传递的参数，这里仅传输了一个那么用于测试，看到如下结果：</p>
+<img src="https://img-blog.csdnimg.cn/20190609191306137.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70" height="70%" width="70%">
+
+<p><strong>完事！！！</strong><br>到此，我们的依赖注入也成功集成到了框架之中！</p>
+<h2 id="四、小结"><a href="#四、小结" class="headerlink" title="四、小结"></a>四、小结</h2><p>在这一篇我们使用==反射==的方式对依赖注入进行了实现，增加了Bean注解用于标记一个类是否是需要管理的Bean，Autowired注解用于注解在何处注入实例化后的Bean。以及核心的实现类BeanFactory工厂，对外提供了获取bean的getBean方法和初始化工厂的initBean的方法。同时修改MappingHandler获取Bean的方式为从工厂中获取。</p>
+<p>测试中增加了UserService并用@Bean标记，并在UserController中注入，成功完成测试。</p>
+<h2 id="五、框架总结"><a href="#五、框架总结" class="headerlink" title="五、框架总结"></a>五、框架总结</h2><p>到这里，我们的小型Spring框架的开发就彻底的结束了。其实项目中还存在着许多的缺陷和不足，在细节方面没有很细的雕琢，如果有大佬进行了改进和实现，欢迎在github里面提交代码呀。</p>
+<ul>
+<li>项目中首先对架构进行了介绍，将项目分为了framewok模块和test模块两个，分别负责框架的实现和测试，在简单的介绍了gradle的相关知识后，实现了SpringBoot的启动方式。</li>
+<li>第二篇对Web请求的流程进行了介绍和分析，分析了请求到Web服务器的传输过程。在此基础上，我们对项目中的包结构进行了扫描，并实现拦截了TestServlet中的请求，最终将Tomcat容器集成在了mini-spring框架之中。</li>
+<li>第三篇是对控制器的核心实现。我们对容器内部的处理流程做了进一步的分析，分析其中存在的问题和Spring对请求方式处理上的改进。根据Spring的实现方式，我们对mini-spring框架进行了实现，ClassScanner获取项目的包结构，使用DispatcherServlet对<code>/</code>下的请求进行了拦截，基于Controller、RequestMapping、RequestParam三个注解实现信息的扫描和配置。</li>
+<li>第四篇在第三篇包扫描的基础上进一步实现依赖注入，首先对控制反转和依赖注入的区别进行了分析，进而在BeanFactory中解决了容器中存在的循环依赖的问题，最终完成我们的mini-spring框架！</li>
+</ul>
+<p>项目中还可以进一步完善，如Controller的参数注解的改进，依赖注入的性能，还可以结合数据持久层的框架，作进一步完善！</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/08/19/从头开始实现一个小型spring框架——控制器controller实现mvc请求拦截和响应/" rel="next" title="从头开始实现一个小型spring框架——控制器controller实现mvc请求拦截和响应">
+                <i class="fa fa-chevron-left"></i> 从头开始实现一个小型spring框架——控制器controller实现mvc请求拦截和响应
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">KevinLyz</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">26</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/qq_31749835" target="_blank" title="csdn">
+                      
+                        <i class="fa fa-fw fa-globe"></i>csdn</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#写在前面"><span class="nav-number">1.</span> <span class="nav-text">写在前面</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#一、bean管理"><span class="nav-number">2.</span> <span class="nav-text">一、bean管理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-什么是bean？"><span class="nav-number">2.1.</span> <span class="nav-text">1.1 什么是bean？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-bean优势"><span class="nav-number">2.2.</span> <span class="nav-text">1.2 bean优势</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二、依赖注入和控制反转"><span class="nav-number">3.</span> <span class="nav-text">二、依赖注入和控制反转</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-控制反转"><span class="nav-number">3.1.</span> <span class="nav-text">2.1 控制反转</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-依赖注入"><span class="nav-number">3.2.</span> <span class="nav-text">2.2 依赖注入</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三、实现"><span class="nav-number">4.</span> <span class="nav-text">三、实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-包结构的改变"><span class="nav-number">4.1.</span> <span class="nav-text">3.1 包结构的改变</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-具体实现"><span class="nav-number">4.2.</span> <span class="nav-text">3.2 具体实现</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#framework模块"><span class="nav-number">4.2.1.</span> <span class="nav-text">framework模块</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#test模块"><span class="nav-number">4.2.2.</span> <span class="nav-text">test模块</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-测试"><span class="nav-number">4.3.</span> <span class="nav-text">3.3 测试</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#四、小结"><span class="nav-number">5.</span> <span class="nav-text">四、小结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#五、框架总结"><span class="nav-number">6.</span> <span class="nav-text">五、框架总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-KevinLyz"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">KevinLyz</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

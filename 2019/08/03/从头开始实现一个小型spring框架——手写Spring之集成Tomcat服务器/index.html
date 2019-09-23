@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/head.jpg?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/head.jpg?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/head.jpg?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="写在前面最近学习了一下spring的相关内容，所以也就想要照猫画虎地记录和实现一下spring的框架，通过阅读这些也希望能够消除对Spring框架的恐惧，其实细心阅读框架也很容易理解。 这是手写Spring系列的第二篇文章，本篇文章将会对web容器对http请求的处理流程进行简答的介绍，然后具体介绍在mini-spring框架中集成tomcat容器的步骤，一步步完善我们的mini-spring框架">
+<meta property="og:type" content="article">
+<meta property="og:title" content="从头开始实现一个小型spring框架——手写Spring之集成Tomcat服务器">
+<meta property="og:url" content="http://yoursite.com/2019/08/03/从头开始实现一个小型spring框架——手写Spring之集成Tomcat服务器/index.html">
+<meta property="og:site_name" content="Kevinlyz">
+<meta property="og:description" content="写在前面最近学习了一下spring的相关内容，所以也就想要照猫画虎地记录和实现一下spring的框架，通过阅读这些也希望能够消除对Spring框架的恐惧，其实细心阅读框架也很容易理解。 这是手写Spring系列的第二篇文章，本篇文章将会对web容器对http请求的处理流程进行简答的介绍，然后具体介绍在mini-spring框架中集成tomcat容器的步骤，一步步完善我们的mini-spring框架">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190605130519749.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190605205120875.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190605205722574.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190605205809179.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70">
+<meta property="og:updated_time" content="2019-09-23T03:02:05.895Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="从头开始实现一个小型spring框架——手写Spring之集成Tomcat服务器">
+<meta name="twitter:description" content="写在前面最近学习了一下spring的相关内容，所以也就想要照猫画虎地记录和实现一下spring的框架，通过阅读这些也希望能够消除对Spring框架的恐惧，其实细心阅读框架也很容易理解。 这是手写Spring系列的第二篇文章，本篇文章将会对web容器对http请求的处理流程进行简答的介绍，然后具体介绍在mini-spring框架中集成tomcat容器的步骤，一步步完善我们的mini-spring框架">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/20190605130519749.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/08/03/从头开始实现一个小型spring框架——手写Spring之集成Tomcat服务器/">
+
+
+
+
+
+  <title>从头开始实现一个小型spring框架——手写Spring之集成Tomcat服务器 | Kevinlyz</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="default">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Kevinlyz</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">当你的才华还撑不起你的野心时，你就应该静下心来学习。</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/03/从头开始实现一个小型spring框架——手写Spring之集成Tomcat服务器/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="KevinLyz">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Kevinlyz">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">从头开始实现一个小型spring框架——手写Spring之集成Tomcat服务器</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-08-03T09:43:18+08:00">
+                2019-08-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h2><p>最近学习了一下spring的相关内容，所以也就想要照猫画虎地记录和实现一下spring的框架，通过阅读这些也希望能够消除对Spring框架的恐惧，其实细心阅读框架也很容易理解。</p>
+<p>这是手写Spring系列的第二篇文章，本篇文章将会对web容器对http请求的处理流程进行简答的介绍，然后具体介绍在mini-spring框架中集成tomcat容器的步骤，一步步完善我们的mini-spring框架。<br>在阅读这篇文章之前，希望你已经看过了上一篇我们对starter启动器的实现，然后继续集成tomcat到我们的mini-spring中。</p>
+<p><strong>项目的源码我放在了github上：</strong><a href="https://github.com/Kevinlyz/mini-spring" target="_blank" rel="noopener">源码地址</a></p>
+<p><strong>我会在这里整理文章的系列目录：</strong></p>
+<ol>
+<li><a href="https://blog.csdn.net/qq_31749835/article/details/90812799" target="_blank" rel="noopener">从头开始实现一个小型spring框架——手写Spring之实现SpringBoot启动</a></li>
+<li><a href="https://blog.csdn.net/qq_31749835/article/details/90933527" target="_blank" rel="noopener">从头开始实现一个小型spring框架——手写Spring之集成Tomcat服务器</a></li>
+<li><a href="https://blog.csdn.net/qq_31749835/article/details/91038594" target="_blank" rel="noopener">从头开始实现一个小型spring框架——控制器controller的实现</a></li>
+<li><a href="https://blog.csdn.net/qq_31749835/article/details/91350454" target="_blank" rel="noopener">从头开始实现一个小型spring框架——实现Bean管理（IOC与DI）</a></li>
+</ol>
+<h2 id="一、Web服务模型及servlet"><a href="#一、Web服务模型及servlet" class="headerlink" title="一、Web服务模型及servlet"></a>一、Web服务模型及servlet</h2><p>在正式实现之前我们需要了解tomcat服务器具体都做了哪些事情，了解web容器对数据的处理流程，才能够更好地吃透我们的min-spring框架。</p>
+<h3 id="1-1-Web服务器"><a href="#1-1-Web服务器" class="headerlink" title="1.1 Web服务器"></a>1.1 Web服务器</h3><ul>
+<li>监听一个TCP端口，如tomcat默认监听的8080端口，浏览器默认的80端口。<br>根据操作系统和计算机网络的相关知识，在传输层实现端到端的通信需要通过端口，每个端口又被应着的应用程序监听着，当有消息通过网络一层层寻址，找到相应ip下相应的端口，便把数据放到相应的端口，进而由应用程序解析相应的内容。</li>
+<li>转发请求，回复相应</li>
+<li>本身没有业务逻辑，仅负责连接操作系统和应用程序代码</li>
+</ul>
+<h3 id="1-2-请求流程"><a href="#1-2-请求流程" class="headerlink" title="1.2 请求流程"></a>1.2 请求流程</h3><img src="https://img-blog.csdnimg.cn/20190605130519749.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70" width="70%" height="70%">
+
+
+
+<p>客户端从浏览器发出请求，通过网络将数据bit流传输至Web服务器（<strong>细节方面涉及计算机网络的分层模型和数据传输过程，这里不过多介绍</strong>），其中还包含了数据请求的端口以及定义的各种协议信息，网卡拿到网络中传来的bit流，将数据转换为字节流，并交给相应的端口处理（<strong>本篇采用的是8899端口</strong>）。而我们的web容器如tomcat，就在监听着这些端口，并将传来的请求移交给相应的代码处理，随时处理网络中传来的数据。但具体处理方式对于web容器来说是一个==黑盒==，<strong>容器并不关系具体的处理过程是怎样的，他只负责接收请求和发回相应两件事情。</strong></p>
+<h2 id="二、实现"><a href="#二、实现" class="headerlink" title="二、实现"></a>二、实现</h2><p>要在mini-spring项目中集成我们的tomcat，首先需要在gradle中添加相应的依赖。</p>
+<p>framework的build.gradle中的dependences添加tomcat的embed版本的相关依赖（因为只是简单实现，所以选择这个版本）<br>包结构（web包下增加server包和servlet包）</p>
+<img src="https://img-blog.csdnimg.cn/20190605205120875.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70" width="60%" height="60%">
+
+<p>我们需要在framework的依赖中添加这么一段：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">// https://mvnrepository.com/artifact/org.apache.tomcat.embed/tomcat-embed-core</span></span><br><span class="line">compile group: <span class="string">'org.apache.tomcat.embed'</span>, name: <span class="string">'tomcat-embed-core'</span>, version: <span class="string">'8.5.23'</span></span><br></pre></td></tr></table></figure>
+
+<p>整体的代码</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">plugins &#123;</span><br><span class="line">    id <span class="string">'java'</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">group <span class="string">'com.qcby'</span></span><br><span class="line">version <span class="string">'1.0-SNAPSHOT'</span></span><br><span class="line"></span><br><span class="line">sourceCompatibility = <span class="number">1.8</span></span><br><span class="line"></span><br><span class="line">repositories &#123;</span><br><span class="line">    mavenCentral()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">dependencies &#123;</span><br><span class="line">    testCompile group: <span class="string">'junit'</span>, name: <span class="string">'junit'</span>, version: <span class="string">'4.12'</span></span><br><span class="line">    <span class="comment">// https://mvnrepository.com/artifact/org.apache.tomcat.embed/tomcat-embed-core</span></span><br><span class="line">    compile group: <span class="string">'org.apache.tomcat.embed'</span>, name: <span class="string">'tomcat-embed-core'</span>, version: <span class="string">'8.5.23'</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在web包下新建一个server包用于保存容器相关的代码</p>
+<p>新建TomcatServer类用于实现我们的Tomcat</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.qcby.web.server;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> com.qcby.web.servlet.TestServlet;</span><br><span class="line"><span class="keyword">import</span> org.apache.catalina.Context;</span><br><span class="line"><span class="keyword">import</span> org.apache.catalina.LifecycleException;</span><br><span class="line"><span class="keyword">import</span> org.apache.catalina.core.StandardContext;</span><br><span class="line"><span class="keyword">import</span> org.apache.catalina.startup.Tomcat;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> kevinlyz</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@ClassName</span> TomcatServer</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span> 集成Tomcat服务器</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Date</span> 2019-06-05 13:10</span></span><br><span class="line"><span class="comment"> **/</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TomcatServer</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> Tomcat tomcat;</span><br><span class="line">    <span class="keyword">private</span> String[] agrs;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">TomcatServer</span><span class="params">(String[] agrs)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.agrs = agrs;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">startServer</span><span class="params">()</span> <span class="keyword">throws</span> LifecycleException </span>&#123;</span><br><span class="line">        <span class="comment">//实例化tomcat</span></span><br><span class="line">        tomcat = <span class="keyword">new</span> Tomcat();</span><br><span class="line">        tomcat.setPort(<span class="number">8899</span>);</span><br><span class="line">        tomcat.start();</span><br><span class="line">        <span class="comment">//实例化context容器</span></span><br><span class="line">        Context context = <span class="keyword">new</span> StandardContext();</span><br><span class="line">        context.setPath(<span class="string">""</span>);</span><br><span class="line">        context.addLifecycleListener(<span class="keyword">new</span> Tomcat.FixContextListener());</span><br><span class="line">        TestServlet testServlet = <span class="keyword">new</span> TestServlet();</span><br><span class="line">        Tomcat.addServlet(context,<span class="string">"testServlet"</span>,testServlet).setAsyncSupported(<span class="keyword">true</span>);</span><br><span class="line">        </span><br><span class="line">        <span class="comment">//添加URL映射</span></span><br><span class="line">        context.addServletMappingDecoded(<span class="string">"/test.json"</span>,<span class="string">"testServlet"</span>);</span><br><span class="line">        tomcat.getHost().addChild(context);</span><br><span class="line"></span><br><span class="line">        <span class="comment">//设置守护线程防止tomcat中途退出</span></span><br><span class="line">        Thread awaitThread = <span class="keyword">new</span> Thread(<span class="string">"tomcat_await_thread."</span>)&#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                TomcatServer.<span class="keyword">this</span>.tomcat.getServer().await();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;;</span><br><span class="line">        <span class="comment">//设置为非守护线程</span></span><br><span class="line">        awaitThread.setDaemon(<span class="keyword">false</span>);</span><br><span class="line">        awaitThread.start();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>servlet包下新建TestServlet用于响应请求</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.qcby.web.servlet;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> javax.servlet.*;</span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> kevinlyz</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@ClassName</span> TestServlet</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span> </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Date</span> 2019-06-05 13:28</span></span><br><span class="line"><span class="comment"> **/</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TestServlet</span> <span class="keyword">implements</span> <span class="title">Servlet</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">(ServletConfig config)</span> <span class="keyword">throws</span> ServletException </span>&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> ServletConfig <span class="title">getServletConfig</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">service</span><span class="params">(ServletRequest req, ServletResponse res)</span> <span class="keyword">throws</span> ServletException, IOException </span>&#123;</span><br><span class="line">        res.getWriter().write(<span class="string">"test"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getServletInfo</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">destroy</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>最后在MiniApplication中实例化我们的Tomcat容器</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.qcby.starter;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> com.qcby.web.server.TomcatServer;</span><br><span class="line"><span class="keyword">import</span> org.apache.catalina.LifecycleException;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> kevinlyz</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@ClassName</span> MiniApplication</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span> 框架的入口类</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Date</span> 2019-06-04 19:21</span></span><br><span class="line"><span class="comment"> **/</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MiniApplication</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">(Class&lt;?&gt; cls,String[] args)</span></span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"Hello mini-spring application！"</span>);</span><br><span class="line">        TomcatServer tomcatServer = <span class="keyword">new</span> TomcatServer(args);</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            tomcatServer.startServer();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (LifecycleException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后<code>gradle build</code></p>
+<p>输入命令：<code>java -jar test/build/libs/test-1.0-SNAPSHOT.jar</code><br>看到控制台打印8899端口的启动</p>
+<img src="https://img-blog.csdnimg.cn/20190605205722574.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70" width="80%" height="80%">
+
+
+
+<p>打开浏览器</p>
+<img src="https://img-blog.csdnimg.cn/20190605205809179.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxNzQ5ODM1,size_16,color_FFFFFF,t_70" width="80%" height="80%">
+
+<p>看到response返回的test字符串！</p>
+<p>喜大普奔，大功告成！</p>
+<h2 id="三、小结"><a href="#三、小结" class="headerlink" title="三、小结"></a>三、小结</h2><p>这是手写Spring系列的第二篇文章，本篇文章在第一篇实现SpringBoot启动的基础上进一步将Tomcat容器集成在了我们的mini-spring框架中。首先对容器处理请求的逻辑进行了简单介绍，分析了tomcat容器对请求的处理和响应，对于内部数据究竟是怎样处理的，web容器并不关心。然后对tomcat的集成做了具体实现，我们新添加了TomcatServer和TestServlet类分别实例化我们的容器和测试我们的Servlet请求拦截，当TestServlet正确匹配到我们请求的<code>/test.json</code>，并成功返回一个test字符串，说明我们的Servelt是有效的。</p>
+<p>P.S. 在TomcatServer实例化容器的时候，我们设置了一个守护线程，<strong>以防止容器的中途退出</strong>。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/08/02/从头开始实现一个小型spring框架——手写Spring之实现SpringBoot启动/" rel="next" title="从头开始实现一个小型spring框架——手写Spring之实现SpringBoot启动">
+                <i class="fa fa-chevron-left"></i> 从头开始实现一个小型spring框架——手写Spring之实现SpringBoot启动
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/08/19/从头开始实现一个小型spring框架——控制器controller实现mvc请求拦截和响应/" rel="prev" title="从头开始实现一个小型spring框架——控制器controller实现mvc请求拦截和响应">
+                从头开始实现一个小型spring框架——控制器controller实现mvc请求拦截和响应 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">KevinLyz</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">26</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/qq_31749835" target="_blank" title="csdn">
+                      
+                        <i class="fa fa-fw fa-globe"></i>csdn</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#写在前面"><span class="nav-number">1.</span> <span class="nav-text">写在前面</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#一、Web服务模型及servlet"><span class="nav-number">2.</span> <span class="nav-text">一、Web服务模型及servlet</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-Web服务器"><span class="nav-number">2.1.</span> <span class="nav-text">1.1 Web服务器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-请求流程"><span class="nav-number">2.2.</span> <span class="nav-text">1.2 请求流程</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二、实现"><span class="nav-number">3.</span> <span class="nav-text">二、实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三、小结"><span class="nav-number">4.</span> <span class="nav-text">三、小结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-KevinLyz"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">KevinLyz</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
